@@ -9,27 +9,30 @@ type Token uint8
 
 const (
 	NewLine Token = iota
-	String
-	Number
-	Comment
 	Whitespace
-	Operator
 	Parenthesis
-	Identifier
+	Operator
+	Action
 	Indent
+	Comment
+	Identifier
+	Value
+	UnquotedValue
 	Unknown
 )
 
 var Rules = map[Token]string{
-	NewLine:     `^\n$`,
-	String:      `^".*"$`,
-	Number:      `^[0-9]+(.[0-9]+)?$`,
-	Comment:     `^#[^\n]*$`,
-	Indent:      `^\t$`,
-	Whitespace:  `^[\s]+$`,
-	Operator:    `^[=:]+$`,
-	Parenthesis: `^[(){}]$`,
-	Identifier:  `^[A-Za-z_-0-9]+$`,
+	NewLine:       `^\n$`,
+	Value:         `^"[^"]*"?$`,
+	UnquotedValue: `^[^\n]+$`,
+	Comment:       `^#[^\n]*$`,
+	Action:        `^\t[^\n]+$`,
+	Indent:        `^\t$`,
+	Whitespace:    `^[\s]+$`,
+	Operator:      `^[=:$]+$`,
+	Parenthesis:   `^[(){}]$`,
+	Identifier:    `^[A-Za-z_-0-9]+$`,
+	Unknown:       `.*`,
 }
 
 type Match struct {
@@ -46,26 +49,37 @@ func Lex(feed chan rune) (chan *Match, chan error) {
 		defer close(errors)
 
 		open := true
-		last_test := string(<-feed)
-		test := last_test
-		last_token := Unknown
+		last := Match{Type: Unknown, Value: ""}
+		test := Match{Type: Unknown, Value: string(<-feed)}
 		for open {
-			for token, pattern := range Rules {
-				matched, _ := regexp.MatchString(pattern, test)
-				if !matched {
-					if last_token == Unknown {
-						errors <- fmt.Errorf("syntax error near '%s'", test)
-						return
-					} else {
-						tokens <- &Match{Type: token, Value: last_test}
-						test = ""
-					}
+			for i := Token(0); i <= Unknown; i++ {
+				matched, _ := regexp.MatchString(Rules[i], test.Value)
+				test.Type = i
+				if matched {
+					break
 				}
 			}
-			last_test = test
-			char, ok := <-feed
-			open = ok
-			test += string(char)
+			if test.Type == Unknown {
+				if last.Type != Unknown {
+					tokens <- &last
+					last = Match{Type: Unknown, Value: ""}
+					test = Match{Type: Unknown, Value: test.Value[len(test.Value)-1:]}
+					continue
+				} else {
+					errors <- fmt.Errorf("syntax error near '%s'", test.Value)
+					return
+				}
+			} else {
+				var char rune
+				char, open = <-feed
+				if !open {
+					tokens <- &test
+					return
+				}
+				last.Type = test.Type
+				last.Value = test.Value
+				test.Value += string(char)
+			}
 		}
 	}()
 
