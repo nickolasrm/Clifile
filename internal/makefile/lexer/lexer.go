@@ -3,36 +3,37 @@ package lexer
 import (
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 type Token uint8
 
 const (
-	NewLine Token = iota
-	Whitespace
-	Parenthesis
-	Operator
-	Action
+	Line Token = iota
 	Indent
+	Docstring
 	Comment
-	Identifier
-	Value
-	UnquotedValue
+	Function
+	Variable
+	Rule
+	Action
 	Unknown
 )
 
-var Rules = map[Token]string{
-	NewLine:       `^\n$`,
-	Value:         `^"[^"]*"?$`,
-	UnquotedValue: `^[^\n]+$`,
-	Comment:       `^#[^\n]*$`,
-	Action:        `^\t[^\n]+$`,
-	Indent:        `^\t$`,
-	Whitespace:    `^[\s]+$`,
-	Operator:      `^[=:$]+$`,
-	Parenthesis:   `^[(){}]$`,
-	Identifier:    `^[A-Za-z_-0-9]+$`,
-	Unknown:       `.*`,
+// ruleRegex returns a regex that matches the pattern at the beginning of a string.
+func ruleRegex(pattern string) *regexp.Regexp {
+	return regexp.MustCompile(fmt.Sprintf(`^%s`, pattern))
+}
+
+var Rules = map[Token]*regexp.Regexp{
+	Line:      ruleRegex(`\n+`),
+	Indent:    ruleRegex(`\t+`),
+	Docstring: ruleRegex(`##[^\n]*`),
+	Comment:   ruleRegex(`#[^\n]*`),
+	Function:  ruleRegex(`\w+=\${[^}]+}`),
+	Variable:  ruleRegex(`\w+=(?:"[^"]*"|[^"\n]*)`),
+	Rule:      ruleRegex(`\w+:[\w ]*`),
+	Action:    ruleRegex(`[^\n]+`),
 }
 
 type Match struct {
@@ -40,7 +41,14 @@ type Match struct {
 	Value string
 }
 
-func Lex(feed chan rune) (chan *Match, chan error) {
+// Lex reads a string and tokenizes it into a stream of tokens and errors.
+// This function is the first step in the interpreter pipeline. It is used
+// to identify the pieces of code that contain meaningful structure for
+// parsing into a syntax tree.
+// The tokens channel is closed when the input string is exhausted.
+// The errors channel is closed when the input string is exhausted or
+// an error is encountered.
+func Lex(code string) (chan *Match, chan error) {
 	tokens := make(chan *Match)
 	errors := make(chan error)
 
@@ -48,37 +56,19 @@ func Lex(feed chan rune) (chan *Match, chan error) {
 		defer close(tokens)
 		defer close(errors)
 
-		open := true
-		last := Match{Type: Unknown, Value: ""}
-		test := Match{Type: Unknown, Value: string(<-feed)}
-		for open {
-			for i := Token(0); i <= Unknown; i++ {
-				matched, _ := regexp.MatchString(Rules[i], test.Value)
-				test.Type = i
-				if matched {
+		for code != "" {
+			match := ""
+			for token := Token(0); token < Token(Unknown); token++ {
+				code = strings.Trim(code, " ")
+				if match = Rules[token].FindString(code); match != "" {
+					tokens <- &Match{token, match}
+					code = code[len(match):]
 					break
 				}
 			}
-			if test.Type == Unknown {
-				if last.Type != Unknown {
-					tokens <- &last
-					last = Match{Type: Unknown, Value: ""}
-					test = Match{Type: Unknown, Value: test.Value[len(test.Value)-1:]}
-					continue
-				} else {
-					errors <- fmt.Errorf("syntax error near '%s'", test.Value)
-					return
-				}
-			} else {
-				var char rune
-				char, open = <-feed
-				if !open {
-					tokens <- &test
-					return
-				}
-				last.Type = test.Type
-				last.Value = test.Value
-				test.Value += string(char)
+			if match == "" {
+				errors <- fmt.Errorf("invalid syntax near '%s'", code)
+				return
 			}
 		}
 	}()
