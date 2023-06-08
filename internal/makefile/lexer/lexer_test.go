@@ -2,11 +2,12 @@ package lexer_test
 
 import (
 	"testing"
+	"time"
 
+	"github.com/gkampitakis/go-snaps/snaps"
 	"github.com/nickolasrm/clifile/internal/makefile/lexer"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gstruct"
 )
 
 func TestLexer(t *testing.T) {
@@ -14,154 +15,145 @@ func TestLexer(t *testing.T) {
 	RunSpecs(t, "Lexer Suite")
 }
 
-// ToChan is a helper function to convert a string to a channel
-// It returns a channel of runes
-func ToChan(str string) chan rune {
-	ch := make(chan rune)
-	go func() {
-		for _, char := range str {
-			ch <- rune(char)
+// SnapshotTokens is a helper function to test channels.
+// It receives a code and tries to match to the previously saved snapshots.
+// If it does not match, it will fail the test.
+// If an error occurs, it will fail the test.
+// If it takes more than 1 second to complete, it will fail the test.
+func SnapshotTokens(code string) {
+	t := GinkgoT()
+	tokens := make([]*lexer.Match, 0)
+	tch, ech := lexer.Lex(code)
+	ok := true
+	var token *lexer.Match
+	var err error
+	for ok {
+		select {
+		case token, ok = <-tch:
+			if ok {
+				tokens = append(tokens, token)
+			}
+		case err, ok = <-ech:
+			Expect(err).To(BeNil())
+		case <-time.After(1 * time.Second):
+			t.Fail()
+			return
 		}
-		close(ch)
-	}()
-	return ch
-}
-
-// MatchTokens is a helper function to test channels
-// It receives a struct and checks if it matches the fields passed
-// If it does not match, it will fail the test
-func MatchTokens(code string, fields ...Fields) {
-	ch := ToChan(code)
-	s, _ := lexer.Lex(ch)
-	Expect(s).ToNot(BeNil())
-	for _, field := range fields {
-		Eventually(s).Should(Receive(PointTo(MatchAllFields(field))))
 	}
+	snaps.MatchSnapshot(t, tokens)
 }
 
 var _ = Describe("Lexer", func() {
 	When("a comment is passed", func() {
-		When("one line", func() {
-			It("should return a comment token", func() {
-				MatchTokens("# This is a comment", Fields{
-					"Type":  Equal(lexer.Comment),
-					"Value": Equal("# This is a comment"),
-				})
-			})
+		It("should return a comment token", func() {
+			SnapshotTokens("# This is a comment")
 		})
 		When("# is present", func() {
 			It("should return a single comment token", func() {
-				MatchTokens("# This is a #comment", Fields{
-					"Type":  Equal(lexer.Comment),
-					"Value": Equal("# This is a #comment"),
-				})
+				SnapshotTokens("# This is a #comment")
 			})
 		})
 		When("another comment is passed", func() {
 			It("should return two comment tokens", func() {
-				MatchTokens("# C1\n# C2", Fields{
-					"Type":  Equal(lexer.Comment),
-					"Value": Equal("# C1"),
-				}, Fields{
-					"Type":  Equal(lexer.NewLine),
-					"Value": Equal("\n"),
-				}, Fields{
-					"Type":  Equal(lexer.Comment),
-					"Value": Equal("# C2"),
+				SnapshotTokens("# C1\n# C2")
+			})
+		})
+	})
+	When("a docstring is passed", func() {
+		It("should return a docstring token", func() {
+			SnapshotTokens("## This is a docstring")
+		})
+		When("## is present", func() {
+			It("should return a single docstring token", func() {
+				SnapshotTokens("## This is a ##docstring")
+			})
+		})
+		When("another docstring is passed", func() {
+			It("should return two docstring tokens", func() {
+				SnapshotTokens("## D1\n## D2")
+			})
+		})
+	})
+	When("a variable is passed", func() {
+		When("unquoted value is passed", func() {
+			It("should return a variable token", func() {
+				SnapshotTokens("VAR=val")
+			})
+			When("multiple lines are passed", func() {
+				It("should return only the variable line", func() {
+					SnapshotTokens("VAR=val\n#comment")
+				})
+			})
+		})
+		When("quoted value is passed", func() {
+			It("should return a variable token", func() {
+				SnapshotTokens("VAR=\"val\"")
+			})
+			When("multiple lines are between quotes", func() {
+				It("should return a variable token", func() {
+					SnapshotTokens("VAR=\"val\nval\"")
 				})
 			})
 		})
 	})
-	When("a value is passed", func() {
-		When("one line", func() {
-			It("should return a value token", func() {
-				MatchTokens("\"This is a value\"", Fields{
-					"Type":  Equal(lexer.Value),
-					"Value": Equal("\"This is a value\""),
-				})
-			})
+	When("a function is passed", func() {
+		It("should return a function token", func() {
+			SnapshotTokens("VAR=${func}")
 		})
-		When("multiline", func() {
-			It("should return a value token", func() {
-				MatchTokens("\"This is a\nvalue\"", Fields{
-					"Type":  Equal(lexer.Value),
-					"Value": Equal("\"This is a\nvalue\""),
-				})
-			})
-		})
-		When("another value is passed", func() {
-			It("should return two value tokens", func() {
-				MatchTokens("\"S1\"\n\"S2\"", Fields{
-					"Type":  Equal(lexer.Value),
-					"Value": Equal("\"S1\""),
-				}, Fields{
-					"Type":  Equal(lexer.NewLine),
-					"Value": Equal("\n"),
-				}, Fields{
-					"Type":  Equal(lexer.Value),
-					"Value": Equal("\"S2\""),
-				})
-			})
-		})
-		When("a value is not closed", func() {
-			It("should return a value token", func() {
-				MatchTokens("\"This is a value", Fields{
-					"Type":  Equal(lexer.Value),
-					"Value": Equal("\"This is a value"),
-				})
+		When("multiple lines are between curly braces", func() {
+			It("should return a function token", func() {
+				SnapshotTokens("VAR=${func\nfunc}")
 			})
 		})
 	})
-	When("unquoted value is passed", func() {
-		It("should return an unquoted value token", func() {
-			MatchTokens("This is a value", Fields{
-				"Type":  Equal(lexer.UnquotedValue),
-				"Value": Equal("This is a value"),
+	When("a rule is passed", func() {
+		It("should return a rule token", func() {
+			SnapshotTokens("rule:")
+		})
+		When("arguments are passed", func() {
+			It("should return a rule token", func() {
+				SnapshotTokens("rule: arg1 arg2")
 			})
 		})
-		When("\n is present", func() {
-			It("should return an unquoted value token", func() {
-				MatchTokens("This is a value\n", Fields{
-					"Type":  Equal(lexer.UnquotedValue),
-					"Value": Equal("This is a value"),
-				}, Fields{
-					"Type":  Equal(lexer.NewLine),
-					"Value": Equal("\n"),
+		When("another rule is passed", func() {
+			It("should return two rule tokens", func() {
+				SnapshotTokens("rule1: a b\nrule2: c d")
+			})
+			When("the second rule is nested", func() {
+				It("should return two rule tokens", func() {
+					SnapshotTokens("rule1: a\n\trule2:")
 				})
 			})
 		})
 	})
 	When("an action is passed", func() {
 		It("should return an action token", func() {
-			MatchTokens("\tThis is an action", Fields{
-				"Type":  Equal(lexer.Action),
-				"Value": Equal("\tThis is an action"),
+			SnapshotTokens("echo \"Hello World\"")
+		})
+		When("multiple lines are passed", func() {
+			It("should return multiple action tokens", func() {
+				SnapshotTokens("echo \"Hello World\"\necho \"Hello World\"")
 			})
 		})
-		When("\\n is present", func() {
-			It("should return an action token", func() {
-				MatchTokens("\tThis is an action\n", Fields{
-					"Type":  Equal(lexer.Action),
-					"Value": Equal("\tThis is an action"),
-				}, Fields{
-					"Type":  Equal(lexer.NewLine),
-					"Value": Equal("\n"),
-				})
-			})
-			When("another action is passed", func() {
-				It("should return two action tokens", func() {
-					MatchTokens("\tA1\n\tA2", Fields{
-						"Type":  Equal(lexer.Action),
-						"Value": Equal("\tA1"),
-					}, Fields{
-						"Type":  Equal(lexer.NewLine),
-						"Value": Equal("\n"),
-					}, Fields{
-						"Type":  Equal(lexer.Action),
-						"Value": Equal("\tA2"),
-					})
-				})
-			})
+	})
+	When("a code snippet is passed", func() {
+		It("should return a sequence of tokens", func() {
+			SnapshotTokens(`
+# This is a comment
+VAR=val
+VAR2="val"
+VAR3=${func}
+VAR4=${func
+func}
+rule1: a b
+	rule4:
+		echo "Hello World"
+rule2: c d
+## This is a docstring
+rule3:
+	echo "Hello World"
+	echo "Hello World"
+`)
 		})
 	})
 })
