@@ -2,7 +2,6 @@ package lexer_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/gkampitakis/go-snaps/snaps"
 	"github.com/nickolasrm/clifile/internal/lexer"
@@ -15,31 +14,14 @@ func TestLexer(t *testing.T) {
 	RunSpecs(t, "Lexer Suite")
 }
 
-// SnapshotTokens is a helper function to test channels.
+// SnapshotTokens is a helper function to test the code.
 // It receives a code and tries to match to the previously saved snapshots.
 // If it does not match, it will fail the test.
 // If an error occurs, it will fail the test.
-// If it takes more than 1 second to complete, it will fail the test.
 func SnapshotTokens(code string) {
 	t := GinkgoT()
-	tokens := make([]*lexer.Match, 0)
-	tch, ech := lexer.Lex(code)
-	ok := true
-	var token *lexer.Match
-	var err error
-	for ok {
-		select {
-		case token, ok = <-tch:
-			if ok {
-				tokens = append(tokens, token)
-			}
-		case err, ok = <-ech:
-			Expect(err).To(BeNil())
-		case <-time.After(1 * time.Second):
-			t.Fail()
-			return
-		}
-	}
+	tokens, error := lexer.Lex(code)
+	Expect(error).To(BeNil())
 	snaps.MatchSnapshot(t, tokens)
 }
 
@@ -96,12 +78,12 @@ var _ = Describe("Lexer", func() {
 			})
 		})
 	})
-	When("a function is passed", func() {
-		It("should return a function token", func() {
+	When("a call is passed", func() {
+		It("should return a call token", func() {
 			SnapshotTokens("VAR=${func}")
 		})
 		When("multiple lines are between curly braces", func() {
-			It("should return a function token", func() {
+			It("should return a call token", func() {
 				SnapshotTokens("VAR=${func\nfunc}")
 			})
 		})

@@ -13,7 +13,7 @@ const (
 	Indent
 	Docstring
 	Comment
-	Function
+	Call
 	Variable
 	Rule
 	Action
@@ -26,11 +26,11 @@ func ruleRegex(pattern string) *regexp.Regexp {
 }
 
 var Rules = map[Token]*regexp.Regexp{
-	Line:      ruleRegex(`\n+`),
+	Line:      ruleRegex(`[\n ]+`),
 	Indent:    ruleRegex(`\t+`),
 	Docstring: ruleRegex(`##([^\n]*)`),
 	Comment:   ruleRegex(`#([^\n]*)`),
-	Function:  ruleRegex(`(\w+)=\${(?:\s+)?(\w+)(?:\s+)?([^}]+)?}`),
+	Call:      ruleRegex(`(\w+)=\${(?:\s+)?(\w+)(?:\s+)?([^}]+)?}`),
 	Variable:  ruleRegex(`(\w+)=(?:"([^"]*)"|([^"\n]*))`),
 	Rule:      ruleRegex(`(\w+):([\w ]*)`),
 	Action:    ruleRegex(`([^\n]+)`),
@@ -50,33 +50,21 @@ type Match struct {
 // This function is the first step in the interpreter pipeline. It is used
 // to identify the pieces of code that contain meaningful structure for
 // parsing into a syntax tree.
-// The tokens channel is closed when the input string is exhausted.
-// The errors channel is closed when the input string is exhausted or
-// an error is encountered.
-func Lex(code string) (chan *Match, chan error) {
-	tokens := make(chan *Match)
-	errors := make(chan error)
-
-	go func() {
-		defer close(tokens)
-		defer close(errors)
-
-		for code != "" {
-			var match []string
-			for token := Token(0); token < Token(Unknown); token++ {
-				code = strings.Trim(code, " ")
-				if match = Rules[token].FindStringSubmatch(code); match != nil {
-					tokens <- &Match{token, match}
-					code = code[len(match[0]):]
-					break
-				}
-			}
-			if match == nil {
-				errors <- fmt.Errorf("invalid syntax near '%s'", code)
-				return
+func Lex(code string) ([]*Match, error) {
+	tokens := make([]*Match, 0)
+	for code != "" {
+		var match []string
+		for token := Token(0); token < Token(Unknown); token++ {
+			code = strings.Trim(code, " ")
+			if match = Rules[token].FindStringSubmatch(code); match != nil {
+				tokens = append(tokens, &Match{token, match})
+				code = code[len(match[0]):]
+				break
 			}
 		}
-	}()
-
-	return tokens, errors
+		if match == nil {
+			return nil, fmt.Errorf("invalid syntax near '%s'", code)
+		}
+	}
+	return tokens, nil
 }
