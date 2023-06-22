@@ -1,0 +1,311 @@
+
+[Parser when a code is passed when contains a comment should ignore a comment - 1]
+&parser.Program{
+    Variables: {
+    },
+    Calls: {
+    },
+    Rules: {
+    },
+}
+---
+
+[Parser when a code is passed when contains a function call should return a function call - 1]
+&parser.Program{
+    Variables: {
+    },
+    Calls: {
+        "Rec": &parser.Call{
+            Name:       "Rec",
+            Function:   "Fn",
+            Parameters: {},
+        },
+    },
+    Rules: {
+    },
+}
+---
+
+[Parser when a code is passed when contains a function call when contains arguments should return a function call with arguments - 1]
+&parser.Program{
+    Variables: {
+    },
+    Calls: {
+        "Rec": &parser.Call{
+            Name:       "Rec",
+            Function:   "Fn",
+            Parameters: {"arg":"1", "arg2":"2"},
+        },
+    },
+    Rules: {
+    },
+}
+---
+
+[Parser when a code is passed when contains a function call when contains arguments when contains an invalid token should return an error - 1]
+&errors.errorString{s:"unexpected syntax inside function call near 'arg3'"}
+---
+
+[Parser when a code is passed when doesn't contain a rule when contains an action should return an error - 1]
+&errors.errorString{s:"action outside of rule near 'echo \"Test\"'"}
+---
+
+[Parser when a code is passed when contains a rule when contains an action should return a rule with an action - 1]
+&parser.Program{
+    Variables: {
+    },
+    Calls: {
+    },
+    Rules: {
+        "rule": &parser.Rule{
+            Name:       "rule",
+            Positional: nil,
+            Docstring:  "",
+            Actions:    "echo \"Test\"\n",
+            Rules:      {
+            },
+        },
+    },
+}
+---
+
+[Parser when a code is passed when contains a rule when contains an action when contains multiple actions should return a rule with multiple actions - 1]
+&parser.Program{
+    Variables: {
+    },
+    Calls: {
+    },
+    Rules: {
+        "rule": &parser.Rule{
+            Name:       "rule",
+            Positional: nil,
+            Docstring:  "",
+            Actions:    "echo \"Test\"\necho \"Test2\"\n",
+            Rules:      {
+            },
+        },
+    },
+}
+---
+
+[Parser when a code is passed when contains a rule when contains an action when preceded by a docstring should return a rule with an action and a docstring - 1]
+&parser.Program{
+    Variables: {
+    },
+    Calls: {
+    },
+    Rules: {
+        "rule": &parser.Rule{
+            Name:       "rule",
+            Positional: nil,
+            Docstring:  " This is a docstring\n",
+            Actions:    "echo \"Test\"\n",
+            Rules:      {
+            },
+        },
+    },
+}
+---
+
+[Parser when a code is passed when contains a rule when contains an action when preceded by a docstring when more than one docstring should concatenate the docstrings into one - 1]
+&parser.Program{
+    Variables: {
+    },
+    Calls: {
+    },
+    Rules: {
+        "rule": &parser.Rule{
+            Name:       "rule",
+            Positional: nil,
+            Docstring:  " This is a docstring\n This is another docstring\n",
+            Actions:    "echo \"Test\"\n",
+            Rules:      {
+            },
+        },
+    },
+}
+---
+
+[Parser when a code is passed when contains a rule when contains an action when preceded by a docstring when docstring is overly indented should return an error - 1]
+&errors.errorString{s:"overly indented docstring near '## This is a docstring'"}
+---
+
+[Parser when a code is passed when contains a rule when contains an action when contains multiple rules should return multiple rules - 1]
+&parser.Program{
+    Variables: {
+    },
+    Calls: {
+    },
+    Rules: {
+        "rule": &parser.Rule{
+            Name:       "rule",
+            Positional: nil,
+            Docstring:  "",
+            Actions:    "echo \"Test\"\n",
+            Rules:      {
+            },
+        },
+        "rule2": &parser.Rule{
+            Name:       "rule2",
+            Positional: nil,
+            Docstring:  "",
+            Actions:    "echo \"Test2\"\n",
+            Rules:      {
+            },
+        },
+    },
+}
+---
+
+[Parser when a code is passed when contains a rule when contains an action when contains multiple rules when a rule is nested should return a rule with a nested rule - 1]
+&parser.Program{
+    Variables: {
+    },
+    Calls: {
+    },
+    Rules: {
+        "rule": &parser.Rule{
+            Name:       "rule",
+            Positional: nil,
+            Docstring:  "",
+            Actions:    "",
+            Rules:      {
+                "rule2": &parser.Rule{
+                    Name:       "rule2",
+                    Positional: nil,
+                    Docstring:  "",
+                    Actions:    "echo \"Test2\"\n",
+                    Rules:      {
+                    },
+                },
+            },
+        },
+    },
+}
+---
+
+[Parser when a code is passed when contains a rule when contains an action when contains multiple rules when a rule is nested when another rule is nested and a group appears after should return a rule with a nested rule and a group - 1]
+&parser.Program{
+    Variables: {
+    },
+    Calls: {
+    },
+    Rules: {
+        "rule": &parser.Rule{
+            Name:       "rule",
+            Positional: nil,
+            Docstring:  "",
+            Actions:    "",
+            Rules:      {
+                "rule2": &parser.Rule{
+                    Name:       "rule2",
+                    Positional: nil,
+                    Docstring:  "",
+                    Actions:    "echo \"Test2\"\n",
+                    Rules:      {
+                    },
+                },
+                "rule3": &parser.Rule{
+                    Name:       "rule3",
+                    Positional: nil,
+                    Docstring:  "",
+                    Actions:    "echo \"Test3\"\n",
+                    Rules:      {
+                    },
+                },
+            },
+        },
+        "rule4": &parser.Rule{
+            Name:       "rule4",
+            Positional: nil,
+            Docstring:  "",
+            Actions:    "echo \"Test4\"\n",
+            Rules:      {
+            },
+        },
+    },
+}
+---
+
+[Parser when a code is passed when contains a rule when contains an action when contains multiple rules when a rule is nested when deeply nested should return a rule with a nested rule and a group - 1]
+&parser.Program{
+    Variables: {
+    },
+    Calls: {
+    },
+    Rules: {
+        "rule": &parser.Rule{
+            Name:       "rule",
+            Positional: nil,
+            Docstring:  "",
+            Actions:    "",
+            Rules:      {
+                "rule2": &parser.Rule{
+                    Name:       "rule2",
+                    Positional: nil,
+                    Docstring:  "",
+                    Actions:    "",
+                    Rules:      {
+                        "rule3": &parser.Rule{
+                            Name:       "rule3",
+                            Positional: nil,
+                            Docstring:  "",
+                            Actions:    "",
+                            Rules:      {
+                                "rule4": &parser.Rule{
+                                    Name:       "rule4",
+                                    Positional: nil,
+                                    Docstring:  "",
+                                    Actions:    "echo \"Test4\"\n",
+                                    Rules:      {
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+}
+---
+
+[Parser when a code is passed when contains a rule when contains an action when contains multiple rules when a rule is nested when more than two tabs are used should return an error - 1]
+&errors.errorString{s:"overly indented rule near 'rule3:'"}
+---
+
+[Parser when a code is passed when contains a rule when contains an action when contains multiple rules when a rule is nested when an action appears in the group rule when the action appears before the nested rule should return an error - 1]
+&errors.errorString{s:"can't add nested rules into a rule 'rule' because it has actions"}
+---
+
+[Parser when a code is passed when contains a rule when contains an action when contains multiple rules when a rule is nested when an action appears in the group rule when the action appears after the nested rule should return an error - 1]
+&errors.errorString{s:"bad identation near 'echo \"Test\"'"}
+---
+
+[Parser when a code is passed when contains a variable should return a variable - 1]
+&parser.Program{
+    Variables: {
+        "Var": &parser.Variable{Name:"Var", Value:"1"},
+    },
+    Calls: {
+    },
+    Rules: {
+    },
+}
+---
+
+[Parser when a code is passed when contains a function call when contains arguments when contains a comment should ignore the comment - 1]
+&parser.Program{
+    Variables: {
+    },
+    Calls: {
+        "Rec": &parser.Call{
+            Name:       "Rec",
+            Function:   "Fn",
+            Parameters: {"arg":"1", "arg2":"2"},
+        },
+    },
+    Rules: {
+    },
+}
+---

@@ -113,7 +113,7 @@
 }
 ---
 
-[Lexer when a function is passed should return a function token - 1]
+[Lexer when a call is passed should return a call token - 1]
 []*lexer.Match{
     &lexer.Match{
         Type:  0x4,
@@ -122,7 +122,7 @@
 }
 ---
 
-[Lexer when a function is passed when multiple lines are between curly braces should return a function token - 1]
+[Lexer when a call is passed when multiple lines are between curly braces should return a call token - 1]
 []*lexer.Match{
     &lexer.Match{
         Type:  0x4,
