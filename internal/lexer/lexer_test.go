@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/gkampitakis/go-snaps/snaps"
-	"github.com/nickolasrm/clifile/internal/makefile/lexer"
+	"github.com/nickolasrm/clifile/internal/lexer"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
