@@ -1,4 +1,4 @@
-// Parser package contains the semantic rules to parse the tokens coming from the lexer
+// Package parser contains the semantic rules to parse the tokens coming from the lexer
 // into a structured program.
 package parser
 

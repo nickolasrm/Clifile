@@ -1,4 +1,4 @@
-// Lexer package contains all the syntatic rules and methods for
+// Package lexer contains all the syntatic rules and methods for
 // tokenizing a string into a stream of tokens.
 package lexer
 
@@ -8,17 +8,27 @@ import (
 	"strings"
 )
 
+// Token is an enum that represents the type of token that was matched.
 type Token uint8
 
 const (
+	// Line represents a line break or a space.
 	Line Token = iota
+	// Indent represents a tab.
 	Indent
+	// Docstring represents a documentation comment.
 	Docstring
+	// Comment represents an ignorable string.
 	Comment
+	// Call represents a function along with its arguments.
 	Call
+	// Variable represents an identified data.
 	Variable
+	// Rule represents a rule a group of rules or a sequence of commands.
 	Rule
+	// Action represents a command that will be executed.
 	Action
+	// Unknown represents an not parsed token.
 	Unknown
 )
 
@@ -27,6 +37,7 @@ func ruleRegex(pattern string) *regexp.Regexp {
 	return regexp.MustCompile(fmt.Sprintf(`^%s`, pattern))
 }
 
+// Rules is a map of tokens to regexes that identify them.
 var Rules = map[Token]*regexp.Regexp{
 	Line:      ruleRegex(`[\n ]+`),
 	Indent:    ruleRegex(`\t+`),
