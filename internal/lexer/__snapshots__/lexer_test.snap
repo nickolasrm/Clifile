@@ -191,7 +191,7 @@
 []*lexer.Match{
     &lexer.Match{
         Type:  0x7,
-        Value: {"echo \"Hello World\"", "echo \"Hello World\""},
+        Value: {"echo \"Hello World\""},
     },
 }
 ---
@@ -200,7 +200,7 @@
 []*lexer.Match{
     &lexer.Match{
         Type:  0x7,
-        Value: {"echo \"Hello World\"", "echo \"Hello World\""},
+        Value: {"echo \"Hello World\""},
     },
     &lexer.Match{
         Type:  0x0,
@@ -208,7 +208,7 @@
     },
     &lexer.Match{
         Type:  0x7,
-        Value: {"echo \"Hello World\"", "echo \"Hello World\""},
+        Value: {"echo \"Hello World\""},
     },
 }
 ---
@@ -285,7 +285,7 @@
     },
     &lexer.Match{
         Type:  0x7,
-        Value: {"echo \"Hello World\"", "echo \"Hello World\""},
+        Value: {"echo \"Hello World\""},
     },
     &lexer.Match{
         Type:  0x0,
@@ -321,7 +321,7 @@
     },
     &lexer.Match{
         Type:  0x7,
-        Value: {"echo \"Hello World\"", "echo \"Hello World\""},
+        Value: {"echo \"Hello World\""},
     },
     &lexer.Match{
         Type:  0x0,
@@ -333,7 +333,7 @@
     },
     &lexer.Match{
         Type:  0x7,
-        Value: {"echo \"Hello World\"", "echo \"Hello World\""},
+        Value: {"echo \"Hello World\""},
     },
     &lexer.Match{
         Type:  0x0,

@@ -102,6 +102,24 @@ rule:
 	echo "Test"
 `)
 				})
+				When("contains an indented variable", func() {
+					It("should return a rule with an action", func() {
+						SnapshotProgram(`
+rule:
+	Var=1
+	echo "Test"
+`)
+					})
+				})
+				When("contains an indented function call", func() {
+					It("should return a rule with an action", func() {
+						SnapshotProgram(`
+rule:
+	Rec=${Fn}
+	echo "Test"
+`)
+					})
+				})
 				When("contains multiple actions", func() {
 					It("should return a rule with multiple actions", func() {
 						SnapshotProgram(`

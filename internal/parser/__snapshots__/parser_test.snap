@@ -279,7 +279,7 @@
 ---
 
 [Parser when a code is passed when contains a rule when contains an action when contains multiple rules when a rule is nested when an action appears in the group rule when the action appears after the nested rule should return an error - 1]
-&errors.errorString{s:"bad identation near 'echo \"Test\"'"}
+&errors.errorString{s:"bad indentation near 'echo \"Test\"'"}
 ---
 
 [Parser when a code is passed when contains a variable should return a variable - 1]
@@ -306,6 +306,44 @@
         },
     },
     Rules: {
+    },
+}
+---
+
+[Parser when a code is passed when contains a rule when contains an action when contains an indented variable should return a rule with an action - 1]
+&parser.Program{
+    Variables: {
+    },
+    Calls: {
+    },
+    Rules: {
+        "rule": &parser.Rule{
+            Name:       "rule",
+            Positional: nil,
+            Docstring:  "",
+            Actions:    "Var=1\necho \"Test\"\n",
+            Rules:      {
+            },
+        },
+    },
+}
+---
+
+[Parser when a code is passed when contains a rule when contains an action when contains an indented function call should return a rule with an action - 1]
+&parser.Program{
+    Variables: {
+    },
+    Calls: {
+    },
+    Rules: {
+        "rule": &parser.Rule{
+            Name:       "rule",
+            Positional: nil,
+            Docstring:  "",
+            Actions:    "Rec=${Fn}\necho \"Test\"\n",
+            Rules:      {
+            },
+        },
     },
 }
 ---

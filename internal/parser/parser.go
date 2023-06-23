@@ -1,3 +1,5 @@
+// Parser package contains the semantic rules to parse the tokens coming from the lexer
+// into a structured program.
 package parser
 
 import (
@@ -7,8 +9,8 @@ import (
 	"github.com/nickolasrm/clifile/internal/lexer"
 )
 
-// Variable is a struct that represents a variable
-// It contains the name of the variable and the value it holds
+// Variable is a struct that represents a variable.
+// it contains the name of the variable and the value it holds
 type Variable struct {
 	Name  string
 	Value string
@@ -23,8 +25,8 @@ func parseVariable(match *lexer.Match) (*Variable, error) {
 	return &Variable{Name: name, Value: value}, nil
 }
 
-// Call is a struct that represents a function call
-// It contains the name of the function, the function itself
+// Call is a struct that represents a function call.
+// it contains the name of the function, the function itself
 // and the parameters that the call received
 type Call struct {
 	Name       string
@@ -68,8 +70,8 @@ func parseCall(match *lexer.Match) (*Call, error) {
 	}, nil
 }
 
-// Rule is a struct that represents a group of actions and its properties
-// It contains the name of the rule, the positional arguments order
+// Rule is a struct that represents a group of actions and its properties.
+// it contains the name of the rule, the positional arguments order,
 // the docstring, the actions the rule will execute and its child rules if it is a group
 type Rule struct {
 	Name       string
@@ -79,16 +81,16 @@ type Rule struct {
 	Rules      map[string]*Rule
 }
 
-// Program is a struct that represents the entire program
-// It contains the variables, the function calls and the rules
+// Program is a struct that represents the entire program.
+// it contains the variables, the function calls and the rules
 type Program struct {
 	Variables map[string]*Variable
 	Calls     map[string]*Call
 	Rules     map[string]*Rule
 }
 
-// Parse parses a list of lexer matches into a structured program
-// It returns a pointer to a Program struct and an error if any
+// Parse parses a list of lexer matches into a structured program.
+// it returns a pointer to a Program struct and an error if any
 // semantic error is found
 func Parse(matches []*lexer.Match) (*Program, error) {
 	program := &Program{
@@ -104,6 +106,17 @@ func Parse(matches []*lexer.Match) (*Program, error) {
 	var rule *Rule = nil
 
 	for _, match := range matches {
+		if indent > 0 {
+			switch match.Type {
+			case lexer.Variable, lexer.Call:
+				match = &lexer.Match{
+					Type:  lexer.Action,
+					Value: []string{match.Value[0]},
+				}
+			default:
+				break
+			}
+		}
 		switch match.Type {
 		case lexer.Line:
 			indent = 0
@@ -126,12 +139,18 @@ func Parse(matches []*lexer.Match) (*Program, error) {
 			program.Calls[call.Name] = call
 		case lexer.Docstring:
 			if indent > len(queue) {
-				return nil, fmt.Errorf("overly indented docstring near '%s'", match.Value[0])
+				return nil, fmt.Errorf(
+					"overly indented docstring near '%s'",
+					match.Value[0],
+				)
 			}
 			docstring += match.Value[1] + "\n"
 		case lexer.Rule:
 			if indent > len(queue) {
-				return nil, fmt.Errorf("overly indented rule near '%s'", match.Value[0])
+				return nil, fmt.Errorf(
+					"overly indented rule near '%s'",
+					match.Value[0],
+				)
 			}
 			queue = queue[:indent]
 			if indent == 0 {
@@ -155,7 +174,10 @@ func Parse(matches []*lexer.Match) (*Program, error) {
 			)
 			if parent != nil {
 				if parent.Actions != "" {
-					return nil, fmt.Errorf("can't add nested rules into a rule '%s' because it has actions", parent.Name)
+					return nil, fmt.Errorf(
+						"can't add nested rules into a rule '%s' because it has actions",
+						parent.Name,
+					)
 				}
 				parent.Rules[name] = rule
 			} else {
@@ -163,12 +185,15 @@ func Parse(matches []*lexer.Match) (*Program, error) {
 			}
 		case lexer.Action:
 			if indent < len(queue) {
-				return nil, fmt.Errorf("bad identation near '%s'", match.Value[0])
+				return nil, fmt.Errorf("bad indentation near '%s'", match.Value[0])
 			}
 			if rule == nil {
-				return nil, fmt.Errorf("action outside of rule near '%s'", match.Value[0])
+				return nil, fmt.Errorf(
+					"action outside of rule near '%s'",
+					match.Value[0],
+				)
 			}
-			rule.Actions += match.Value[1] + "\n"
+			rule.Actions += match.Value[0] + "\n"
 		}
 	}
 

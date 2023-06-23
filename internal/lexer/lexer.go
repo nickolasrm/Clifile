@@ -1,3 +1,5 @@
+// Lexer package contains all the syntatic rules and methods for
+// tokenizing a string into a stream of tokens.
 package lexer
 
 import (
@@ -33,7 +35,7 @@ var Rules = map[Token]*regexp.Regexp{
 	Call:      ruleRegex(`(\w+)=\${(?:\s+)?(\w+)(?:\s+)?([^}]+)?}`),
 	Variable:  ruleRegex(`(\w+)=(?:"([^"]*)"|([^"\n]*))`),
 	Rule:      ruleRegex(`(\w+):([\w ]*)`),
-	Action:    ruleRegex(`([^\n]+)`),
+	Action:    ruleRegex(`[^\n]+`),
 }
 
 // Match represents a token and the value that was matched.
