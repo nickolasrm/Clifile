@@ -10,6 +10,8 @@ import (
 	"github.com/nickolasrm/clifile/internal/parser"
 )
 
+// TryThrow checks if an error is not nil and then prints it to stderr and
+// finished the program execution
 func TryThrow(err error) {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -17,6 +19,7 @@ func TryThrow(err error) {
 	}
 }
 
+// ReadCode reads the Clifile reference and returns its contents or an error
 func ReadCode() (string, error) {
 	body, err := ioutil.ReadFile("Clifile")
 	if err != nil {
@@ -25,6 +28,7 @@ func ReadCode() (string, error) {
 	return string(body), nil
 }
 
+// Run interprets and executes a Clifile syntax code string
 func Run(code string) {
 	tokens, err := lexer.Lex(code)
 	TryThrow(err)
@@ -34,6 +38,7 @@ func Run(code string) {
 	exec.Run()
 }
 
+// RunFile interprets and executes the Clifile
 func RunFile() {
 	code, err := ReadCode()
 	TryThrow(err)
