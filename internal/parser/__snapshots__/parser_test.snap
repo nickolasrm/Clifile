@@ -10,15 +10,27 @@
 }
 ---
 
+[Parser when a code is passed when contains a variable should return a variable - 1]
+&parser.Program{
+    Variables: {
+        "Var": &parser.Variable{Name:"Var", Value:"1"},
+    },
+    Calls: {
+    },
+    Rules: {
+    },
+}
+---
+
 [Parser when a code is passed when contains a function call should return a function call - 1]
 &parser.Program{
     Variables: {
     },
     Calls: {
         "Rec": &parser.Call{
-            Name:       "Rec",
-            Function:   "Fn",
-            Parameters: {},
+            Name:      "Rec",
+            Function:  "Fn",
+            Arguments: {},
         },
     },
     Rules: {
@@ -32,9 +44,9 @@
     },
     Calls: {
         "Rec": &parser.Call{
-            Name:       "Rec",
-            Function:   "Fn",
-            Parameters: {"arg":"1", "arg2":"2"},
+            Name:      "Rec",
+            Function:  "Fn",
+            Arguments: {"arg":"1", "arg2":"2"},
         },
     },
     Rules: {
@@ -44,6 +56,22 @@
 
 [Parser when a code is passed when contains a function call when contains arguments when contains an invalid token should return an error - 1]
 &errors.errorString{s:"unexpected syntax inside function call near 'arg3'"}
+---
+
+[Parser when a code is passed when contains a function call when contains arguments when contains a comment should ignore the comment - 1]
+&parser.Program{
+    Variables: {
+    },
+    Calls: {
+        "Rec": &parser.Call{
+            Name:      "Rec",
+            Function:  "Fn",
+            Arguments: {"arg":"1", "arg2":"2"},
+        },
+    },
+    Rules: {
+    },
+}
 ---
 
 [Parser when a code is passed when doesn't contain a rule when contains an action should return an error - 1]
@@ -62,6 +90,44 @@
             Positional: nil,
             Docstring:  "",
             Actions:    "echo \"Test\"\n",
+            Rules:      {
+            },
+        },
+    },
+}
+---
+
+[Parser when a code is passed when contains a rule when contains an action when contains an indented variable should return a rule with an action - 1]
+&parser.Program{
+    Variables: {
+    },
+    Calls: {
+    },
+    Rules: {
+        "rule": &parser.Rule{
+            Name:       "rule",
+            Positional: nil,
+            Docstring:  "",
+            Actions:    "Var=1\necho \"Test\"\n",
+            Rules:      {
+            },
+        },
+    },
+}
+---
+
+[Parser when a code is passed when contains a rule when contains an action when contains an indented function call should return a rule with an action - 1]
+&parser.Program{
+    Variables: {
+    },
+    Calls: {
+    },
+    Rules: {
+        "rule": &parser.Rule{
+            Name:       "rule",
+            Positional: nil,
+            Docstring:  "",
+            Actions:    "Rec=${Fn}\necho \"Test\"\n",
             Rules:      {
             },
         },
@@ -282,35 +348,7 @@
 &errors.errorString{s:"bad indentation near 'echo \"Test\"'"}
 ---
 
-[Parser when a code is passed when contains a variable should return a variable - 1]
-&parser.Program{
-    Variables: {
-        "Var": &parser.Variable{Name:"Var", Value:"1"},
-    },
-    Calls: {
-    },
-    Rules: {
-    },
-}
----
-
-[Parser when a code is passed when contains a function call when contains arguments when contains a comment should ignore the comment - 1]
-&parser.Program{
-    Variables: {
-    },
-    Calls: {
-        "Rec": &parser.Call{
-            Name:       "Rec",
-            Function:   "Fn",
-            Parameters: {"arg":"1", "arg2":"2"},
-        },
-    },
-    Rules: {
-    },
-}
----
-
-[Parser when a code is passed when contains a rule when contains an action when contains an indented variable should return a rule with an action - 1]
+[Parser when a code is passed when contains a rule when contains positional parameters should return rule with positional params - 1]
 &parser.Program{
     Variables: {
     },
@@ -319,9 +357,9 @@
     Rules: {
         "rule": &parser.Rule{
             Name:       "rule",
-            Positional: nil,
+            Positional: {"param1", "param2"},
             Docstring:  "",
-            Actions:    "Var=1\necho \"Test\"\n",
+            Actions:    "echo \"test\"\n",
             Rules:      {
             },
         },
@@ -329,19 +367,63 @@
 }
 ---
 
-[Parser when a code is passed when contains a rule when contains an action when contains an indented function call should return a rule with an action - 1]
+[Parser when a code is passed when a full example appeared should parse multiple matches - 1]
 &parser.Program{
     Variables: {
+        "VAR":  &parser.Variable{Name:"VAR", Value:"abd"},
+        "VAR2": &parser.Variable{Name:"VAR2", Value:"def\ndfg"},
     },
     Calls: {
+        "FLAG1": &parser.Call{
+            Name:      "FLAG1",
+            Function:  "fn1",
+            Arguments: {"x":"y", "z":"d"},
+        },
+        "FLAG2": &parser.Call{
+            Name:      "FLAG2",
+            Function:  "fn2",
+            Arguments: {},
+        },
     },
     Rules: {
-        "rule": &parser.Rule{
-            Name:       "rule",
-            Positional: nil,
+        "grp1": &parser.Rule{
+            Name:       "grp1",
+            Positional: {"FLAG2", "FLAG1"},
             Docstring:  "",
-            Actions:    "Rec=${Fn}\necho \"Test\"\n",
+            Actions:    "",
             Rules:      {
+                "cmd2": &parser.Rule{
+                    Name:       "cmd2",
+                    Positional: nil,
+                    Docstring:  "",
+                    Actions:    "VARSHELL=2\necho \"test\"\n",
+                    Rules:      {
+                    },
+                },
+                "cmd3": &parser.Rule{
+                    Name:       "cmd3",
+                    Positional: nil,
+                    Docstring:  " Documentation\n",
+                    Actions:    "sed ${FLAG1}\n",
+                    Rules:      {
+                    },
+                },
+            },
+        },
+        "grp2": &parser.Rule{
+            Name:       "grp2",
+            Positional: nil,
+            Docstring:  " Doc\n",
+            Actions:    "",
+            Rules:      {
+                "cmd1": &parser.Rule{
+                    Name:       "cmd1",
+                    Positional: nil,
+                    Docstring:  "",
+                    Actions:    "hey ${VAR1}\n",
+                    Rules:      {
+                    },
+                },
             },
         },
     },

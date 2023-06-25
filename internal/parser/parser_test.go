@@ -95,6 +95,14 @@ echo "Test"
 			})
 		})
 		When("contains a rule", func() {
+			When("contains positional parameters", func() {
+				It("should return rule with positional params", func() {
+					SnapshotProgram(`
+rule: param1 param2
+	echo "test"
+`)
+				})
+			})
 			When("contains an action", func() {
 				It("should return a rule with an action", func() {
 					SnapshotProgram(`
@@ -233,6 +241,32 @@ rule:
 						})
 					})
 				})
+			})
+		})
+		When("a full example appeared", func() {
+			It("should parse multiple matches", func() {
+				SnapshotProgram(`
+VAR=abd
+VAR2="def
+dfg"
+FLAG1=${fn1 x=y
+	z="d"
+}
+FLAG2=${fn2}
+
+# This is a comment
+grp1: FLAG2 FLAG1
+	cmd2:
+		VARSHELL=2
+		echo "test"
+	## Documentation
+	cmd3:
+		sed ${FLAG1}
+## Doc
+grp2:
+	cmd1:
+		hey ${VAR1}
+`)
 			})
 		})
 	})

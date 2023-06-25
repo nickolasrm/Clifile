@@ -27,23 +27,23 @@ func parseVariable(match *lexer.Match) (*Variable, error) {
 
 // Call is a struct that represents a function call.
 // it contains the name of the function, the function itself
-// and the parameters that the call received
+// and the arguments that the call received
 type Call struct {
-	Name       string
-	Function   string
-	Parameters map[string]string
+	Name      string
+	Function  string
+	Arguments map[string]string
 }
 
 func parseCall(match *lexer.Match) (*Call, error) {
 	name := match.Value[1]
 	function := match.Value[2]
-	parametersString := match.Value[3]
-	paramTokens, err := lexer.Lex(parametersString)
+	argumentString := match.Value[3]
+	argumentTokens, err := lexer.Lex(argumentString)
 	if err != nil {
 		return nil, err
 	}
 	keywords := make(map[string]string)
-	for _, submatch := range paramTokens {
+	for _, submatch := range argumentTokens {
 		switch submatch.Type {
 		case lexer.Variable:
 			variable, err := parseVariable(submatch)
@@ -64,9 +64,9 @@ func parseCall(match *lexer.Match) (*Call, error) {
 		}
 	}
 	return &Call{
-		Name:       name,
-		Function:   function,
-		Parameters: keywords,
+		Name:      name,
+		Function:  function,
+		Arguments: keywords,
 	}, nil
 }
 
