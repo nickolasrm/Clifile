@@ -1,13 +1,12 @@
 package interpreter
 
 import (
-	"bufio"
 	"fmt"
 	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/nickolasrm/clifile/internal/parser"
+	"github.com/nickolasrm/clifile/package/util"
 	"github.com/spf13/cobra"
 )
 
@@ -59,17 +58,7 @@ func (e *Execution) buildGroup(rule *parser.Rule) *cobra.Command {
 func (e *Execution) buildCommand(rule *parser.Rule) *cobra.Command {
 	cmd := e.buildGroup(rule)
 	cmd.Run = func(cmd *cobra.Command, args []string) {
-		shellCmd := exec.Command(rule.Actions)
-		pipe, _ := shellCmd.StdoutPipe()
-		if err := shellCmd.Start(); err != nil {
-			panic(err)
-		}
-		reader := bufio.NewReader(pipe)
-		line, err := reader.ReadString('\n')
-		for err == nil {
-			fmt.Println(line)
-			line, err = reader.ReadString('\n')
-		}
+		util.Shell(rule.Actions)
 	}
 	return cmd
 }

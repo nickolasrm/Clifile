@@ -3,21 +3,12 @@ package runner
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 
 	"github.com/nickolasrm/clifile/internal/interpreter"
 	"github.com/nickolasrm/clifile/internal/lexer"
 	"github.com/nickolasrm/clifile/internal/parser"
+	"github.com/nickolasrm/clifile/package/util"
 )
-
-// TryThrow checks if an error is not nil and then prints it to stderr and
-// finished the program execution
-func TryThrow(err error) {
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-}
 
 // ReadCode reads the Clifile reference and returns its contents or an error
 func ReadCode() (string, error) {
@@ -31,9 +22,9 @@ func ReadCode() (string, error) {
 // Run interprets and executes a Clifile syntax code string
 func Run(code string) {
 	tokens, err := lexer.Lex(code)
-	TryThrow(err)
+	util.TryThrow(err)
 	program, err := parser.Parse(tokens)
-	TryThrow(err)
+	util.TryThrow(err)
 	exec := interpreter.Interpret(program)
 	exec.Run()
 }
@@ -41,6 +32,6 @@ func Run(code string) {
 // RunFile interprets and executes the Clifile
 func RunFile() {
 	code, err := ReadCode()
-	TryThrow(err)
+	util.TryThrow(err)
 	Run(code)
 }
