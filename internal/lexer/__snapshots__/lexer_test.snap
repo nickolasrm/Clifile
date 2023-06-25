@@ -38,7 +38,7 @@
 []*lexer.Match{
     &lexer.Match{
         Type:  0x2,
-        Value: {"## This is a docstring", " This is a docstring"},
+        Value: {"## This is a docstring", "This is a docstring"},
     },
 }
 ---
@@ -47,7 +47,7 @@
 []*lexer.Match{
     &lexer.Match{
         Type:  0x2,
-        Value: {"## This is a ##docstring", " This is a ##docstring"},
+        Value: {"## This is a ##docstring", "This is a ##docstring"},
     },
 }
 ---
@@ -56,7 +56,7 @@
 []*lexer.Match{
     &lexer.Match{
         Type:  0x2,
-        Value: {"## D1", " D1"},
+        Value: {"## D1", "D1"},
     },
     &lexer.Match{
         Type:  0x0,
@@ -64,7 +64,7 @@
     },
     &lexer.Match{
         Type:  0x2,
-        Value: {"## D2", " D2"},
+        Value: {"## D2", "D2"},
     },
 }
 ---
@@ -301,7 +301,7 @@
     },
     &lexer.Match{
         Type:  0x2,
-        Value: {"## This is a docstring", " This is a docstring"},
+        Value: {"## This is a docstring", "This is a docstring"},
     },
     &lexer.Match{
         Type:  0x0,

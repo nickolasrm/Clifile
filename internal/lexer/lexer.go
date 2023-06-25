@@ -41,7 +41,7 @@ func ruleRegex(pattern string) *regexp.Regexp {
 var Rules = map[Token]*regexp.Regexp{
 	Line:      ruleRegex(`[\n ]+`),
 	Indent:    ruleRegex(`\t+`),
-	Docstring: ruleRegex(`##([^\n]*)`),
+	Docstring: ruleRegex(`##[ ]?([^\n]*)`),
 	Comment:   ruleRegex(`#([^\n]*)`),
 	Call:      ruleRegex(`(\w+)=\${(?:\s+)?(\w+)(?:\s+)?([^}]+)?}`),
 	Variable:  ruleRegex(`(\w+)=(?:"([^"]*)"|([^"\n]*))`),

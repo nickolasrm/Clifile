@@ -43,6 +43,30 @@ func SnapshotProgramError(code string) {
 
 var _ = Describe("Parser", func() {
 	When("a code is passed", func() {
+		When("first line is a docstring", func() {
+			It("should parse it as the program name", func() {
+				SnapshotProgram(`## Name`)
+			})
+			When("followed by more docstrings", func() {
+				It("should parse them as doc", func() {
+					SnapshotProgram(`## Name
+## Descr
+## iption
+`)
+				})
+			})
+			When("contains a rule", func() {
+				It("should not parse it as rule docstring", func() {
+					SnapshotProgram(`## Name
+## Descr
+
+## Rule
+rule:
+	echo "test"
+`)
+				})
+			})
+		})
 		When("contains a comment", func() {
 			It("should ignore a comment", func() {
 				SnapshotProgram(`
@@ -245,7 +269,10 @@ rule:
 		})
 		When("a full example appeared", func() {
 			It("should parse multiple matches", func() {
-				SnapshotProgram(`
+				SnapshotProgram(`## Name
+## Descr
+## iption
+
 VAR=abd
 VAR2="def
 dfg"

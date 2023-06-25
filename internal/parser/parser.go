@@ -76,7 +76,7 @@ func parseCall(match *lexer.Match) (*Call, error) {
 type Rule struct {
 	Name       string
 	Positional []string
-	Docstring  string
+	Doc        string
 	Actions    string
 	Rules      map[string]*Rule
 }
@@ -84,9 +84,43 @@ type Rule struct {
 // Program is a struct that represents the entire program.
 // it contains the variables, the function calls and the rules
 type Program struct {
+	Name      string
+	Doc       string
 	Variables map[string]*Variable
 	Calls     map[string]*Call
 	Rules     map[string]*Rule
+}
+
+func (p *Program) parseMetadata(matches []*lexer.Match) []*lexer.Match {
+	if matches[0].Type == lexer.Docstring {
+		p.Name = matches[0].Value[1]
+		matches = matches[1:]
+		programDoc := ""
+		var i int
+		var match *lexer.Match
+		lines := 0
+		for i, match = range matches {
+			switch match.Type {
+			case lexer.Docstring:
+				if lines > 1 {
+					goto Exit
+				}
+				programDoc += match.Value[1] + "\n"
+				lines = 0
+			case lexer.Line:
+				lines = len(match.Value[0])
+				continue
+			default:
+				goto Exit
+			}
+		}
+	Exit:
+		if programDoc != "" {
+			p.Doc = programDoc
+			matches = matches[i-1:]
+		}
+	}
+	return matches
 }
 
 // Parse parses a list of lexer matches into a structured program.
@@ -94,10 +128,13 @@ type Program struct {
 // semantic error is found
 func Parse(matches []*lexer.Match) (*Program, error) {
 	program := &Program{
+		Name:      "Software Command Line Interface (CLI)",
+		Doc:       "Use this as shortcut for user-defined commands",
 		Variables: make(map[string]*Variable),
 		Calls:     make(map[string]*Call),
 		Rules:     make(map[string]*Rule),
 	}
+	matches = program.parseMetadata(matches)
 
 	indent := 0
 	queue := make([]*Rule, 0)
@@ -161,7 +198,7 @@ func Parse(matches []*lexer.Match) (*Program, error) {
 			rule = &Rule{
 				Name:       "",
 				Positional: nil,
-				Docstring:  docstring,
+				Doc:        docstring,
 				Actions:    "",
 				Rules:      make(map[string]*Rule),
 			}
