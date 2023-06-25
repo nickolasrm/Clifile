@@ -29,7 +29,8 @@
 			"extensions": [
 				"GitHub.copilot",
 				"vivaxy.vscode-conventional-commits",
-				"golang.Go"
+				"golang.Go",
+				"GitHub.vscode-pull-request-github"
 			]
 		}
 	}

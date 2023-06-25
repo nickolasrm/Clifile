@@ -44,16 +44,8 @@ func SnapshotProgramError(code string) {
 var _ = Describe("Parser", func() {
 	When("a code is passed", func() {
 		When("first line is a docstring", func() {
-			It("should parse it as the program name", func() {
+			It("should parse it as doc", func() {
 				SnapshotProgram(`## Name`)
-			})
-			When("followed by more docstrings", func() {
-				It("should parse them as doc", func() {
-					SnapshotProgram(`## Name
-## Descr
-## iption
-`)
-				})
 			})
 			When("contains a rule", func() {
 				It("should not parse it as rule docstring", func() {

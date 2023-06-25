@@ -1,21 +1,7 @@
 
-[Parser when a code is passed when first line is a docstring should parse it as the program name - 1]
+[Parser when a code is passed when first line is a docstring should parse it as doc - 1]
 &parser.Program{
-    Name:      "Name",
-    Doc:       "Use this as shortcut for user-defined commands",
-    Variables: {
-    },
-    Calls: {
-    },
-    Rules: {
-    },
-}
----
-
-[Parser when a code is passed when first line is a docstring when followed by more docstrings should parse them as doc - 1]
-&parser.Program{
-    Name:      "Name",
-    Doc:       "Descr\niption\n",
+    Doc:       "Name\n",
     Variables: {
     },
     Calls: {
@@ -27,8 +13,7 @@
 
 [Parser when a code is passed when first line is a docstring when contains a rule should not parse it as rule docstring - 1]
 &parser.Program{
-    Name:      "Name",
-    Doc:       "Descr\n",
+    Doc:       "Name\nDescr\n",
     Variables: {
     },
     Calls: {
@@ -48,8 +33,7 @@
 
 [Parser when a code is passed when contains a comment should ignore a comment - 1]
 &parser.Program{
-    Name:      "Software Command Line Interface (CLI)",
-    Doc:       "Use this as shortcut for user-defined commands",
+    Doc:       "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
     Variables: {
     },
     Calls: {
@@ -61,8 +45,7 @@
 
 [Parser when a code is passed when contains a variable should return a variable - 1]
 &parser.Program{
-    Name:      "Software Command Line Interface (CLI)",
-    Doc:       "Use this as shortcut for user-defined commands",
+    Doc:       "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
     Variables: {
         "Var": &parser.Variable{Name:"Var", Value:"1"},
     },
@@ -75,8 +58,7 @@
 
 [Parser when a code is passed when contains a function call should return a function call - 1]
 &parser.Program{
-    Name:      "Software Command Line Interface (CLI)",
-    Doc:       "Use this as shortcut for user-defined commands",
+    Doc:       "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
     Variables: {
     },
     Calls: {
@@ -93,8 +75,7 @@
 
 [Parser when a code is passed when contains a function call when contains arguments should return a function call with arguments - 1]
 &parser.Program{
-    Name:      "Software Command Line Interface (CLI)",
-    Doc:       "Use this as shortcut for user-defined commands",
+    Doc:       "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
     Variables: {
     },
     Calls: {
@@ -115,8 +96,7 @@
 
 [Parser when a code is passed when contains a function call when contains arguments when contains a comment should ignore the comment - 1]
 &parser.Program{
-    Name:      "Software Command Line Interface (CLI)",
-    Doc:       "Use this as shortcut for user-defined commands",
+    Doc:       "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
     Variables: {
     },
     Calls: {
@@ -137,8 +117,7 @@
 
 [Parser when a code is passed when contains a rule when contains positional parameters should return rule with positional params - 1]
 &parser.Program{
-    Name:      "Software Command Line Interface (CLI)",
-    Doc:       "Use this as shortcut for user-defined commands",
+    Doc:       "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
     Variables: {
     },
     Calls: {
@@ -158,8 +137,7 @@
 
 [Parser when a code is passed when contains a rule when contains an action should return a rule with an action - 1]
 &parser.Program{
-    Name:      "Software Command Line Interface (CLI)",
-    Doc:       "Use this as shortcut for user-defined commands",
+    Doc:       "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
     Variables: {
     },
     Calls: {
@@ -179,8 +157,7 @@
 
 [Parser when a code is passed when contains a rule when contains an action when contains an indented variable should return a rule with an action - 1]
 &parser.Program{
-    Name:      "Software Command Line Interface (CLI)",
-    Doc:       "Use this as shortcut for user-defined commands",
+    Doc:       "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
     Variables: {
     },
     Calls: {
@@ -200,8 +177,7 @@
 
 [Parser when a code is passed when contains a rule when contains an action when contains an indented function call should return a rule with an action - 1]
 &parser.Program{
-    Name:      "Software Command Line Interface (CLI)",
-    Doc:       "Use this as shortcut for user-defined commands",
+    Doc:       "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
     Variables: {
     },
     Calls: {
@@ -221,8 +197,7 @@
 
 [Parser when a code is passed when contains a rule when contains an action when contains multiple actions should return a rule with multiple actions - 1]
 &parser.Program{
-    Name:      "Software Command Line Interface (CLI)",
-    Doc:       "Use this as shortcut for user-defined commands",
+    Doc:       "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
     Variables: {
     },
     Calls: {
@@ -242,8 +217,7 @@
 
 [Parser when a code is passed when contains a rule when contains an action when preceded by a docstring should return a rule with an action and a docstring - 1]
 &parser.Program{
-    Name:      "Software Command Line Interface (CLI)",
-    Doc:       "Use this as shortcut for user-defined commands",
+    Doc:       "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
     Variables: {
     },
     Calls: {
@@ -263,8 +237,7 @@
 
 [Parser when a code is passed when contains a rule when contains an action when preceded by a docstring when more than one docstring should concatenate the docstrings into one - 1]
 &parser.Program{
-    Name:      "Software Command Line Interface (CLI)",
-    Doc:       "Use this as shortcut for user-defined commands",
+    Doc:       "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
     Variables: {
     },
     Calls: {
@@ -288,8 +261,7 @@
 
 [Parser when a code is passed when contains a rule when contains an action when contains multiple rules should return multiple rules - 1]
 &parser.Program{
-    Name:      "Software Command Line Interface (CLI)",
-    Doc:       "Use this as shortcut for user-defined commands",
+    Doc:       "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
     Variables: {
     },
     Calls: {
@@ -317,8 +289,7 @@
 
 [Parser when a code is passed when contains a rule when contains an action when contains multiple rules when a rule is nested should return a rule with a nested rule - 1]
 &parser.Program{
-    Name:      "Software Command Line Interface (CLI)",
-    Doc:       "Use this as shortcut for user-defined commands",
+    Doc:       "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
     Variables: {
     },
     Calls: {
@@ -346,8 +317,7 @@
 
 [Parser when a code is passed when contains a rule when contains an action when contains multiple rules when a rule is nested when another rule is nested and a group appears after should return a rule with a nested rule and a group - 1]
 &parser.Program{
-    Name:      "Software Command Line Interface (CLI)",
-    Doc:       "Use this as shortcut for user-defined commands",
+    Doc:       "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
     Variables: {
     },
     Calls: {
@@ -391,8 +361,7 @@
 
 [Parser when a code is passed when contains a rule when contains an action when contains multiple rules when a rule is nested when deeply nested should return a rule with a nested rule and a group - 1]
 &parser.Program{
-    Name:      "Software Command Line Interface (CLI)",
-    Doc:       "Use this as shortcut for user-defined commands",
+    Doc:       "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
     Variables: {
     },
     Calls: {
@@ -448,8 +417,7 @@
 
 [Parser when a code is passed when a full example appeared should parse multiple matches - 1]
 &parser.Program{
-    Name:      "Name",
-    Doc:       "Descr\niption\n",
+    Doc:       "Name\nDescr\niption\n",
     Variables: {
         "VAR":  &parser.Variable{Name:"VAR", Value:"abd"},
         "VAR2": &parser.Variable{Name:"VAR2", Value:"def\ndfg"},

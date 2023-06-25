@@ -84,7 +84,6 @@ type Rule struct {
 // Program is a struct that represents the entire program.
 // it contains the variables, the function calls and the rules
 type Program struct {
-	Name      string
 	Doc       string
 	Variables map[string]*Variable
 	Calls     map[string]*Call
@@ -93,8 +92,6 @@ type Program struct {
 
 func (p *Program) parseMetadata(matches []*lexer.Match) []*lexer.Match {
 	if matches[0].Type == lexer.Docstring {
-		p.Name = matches[0].Value[1]
-		matches = matches[1:]
 		programDoc := ""
 		var i int
 		var match *lexer.Match
@@ -117,7 +114,7 @@ func (p *Program) parseMetadata(matches []*lexer.Match) []*lexer.Match {
 	Exit:
 		if programDoc != "" {
 			p.Doc = programDoc
-			matches = matches[i-1:]
+			matches = matches[i:]
 		}
 	}
 	return matches
@@ -128,8 +125,8 @@ func (p *Program) parseMetadata(matches []*lexer.Match) []*lexer.Match {
 // semantic error is found
 func Parse(matches []*lexer.Match) (*Program, error) {
 	program := &Program{
-		Name:      "Software Command Line Interface (CLI)",
-		Doc:       "Use this as shortcut for user-defined commands",
+		Doc: `Software Command Line Interface (CLI)
+Use this as shortcut for user-defined commands`,
 		Variables: make(map[string]*Variable),
 		Calls:     make(map[string]*Call),
 		Rules:     make(map[string]*Rule),
