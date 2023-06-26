@@ -113,6 +113,15 @@
 }
 ---
 
+[Lexer when a variable is passed when quoted value is passed when space or tabs appear around equal should return a variable token - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        Type:  0x5,
+        Value: {"VAR \t=  \t\"ASD\"", "VAR", "ASD", ""},
+    },
+}
+---
+
 [Lexer when a call is passed should return a call token - 1]
 []*lexer.Match{
     &lexer.Match{
@@ -127,6 +136,15 @@
     &lexer.Match{
         Type:  0x4,
         Value: {"VAR=${func\nfunc}", "VAR", "func", "func"},
+    },
+}
+---
+
+[Lexer when a call is passed when space or tabs appear around equal should return a call token - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        Type:  0x4,
+        Value: {"VAR\t =  \t${func}", "VAR", "func", ""},
     },
 }
 ---

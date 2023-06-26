@@ -13,7 +13,7 @@ type Token uint8
 
 const (
 	// Line represents a line break or a space.
-	Line Token = iota
+	Line = iota
 	// Indent represents a tab.
 	Indent
 	// Docstring represents a documentation comment.
@@ -43,8 +43,8 @@ var Rules = map[Token]*regexp.Regexp{
 	Indent:    ruleRegex(`\t+`),
 	Docstring: ruleRegex(`##[ ]?([^\n]*)`),
 	Comment:   ruleRegex(`#([^\n]*)`),
-	Call:      ruleRegex(`(\w+)=\${(?:\s+)?(\w+)(?:\s+)?([^}]+)?}`),
-	Variable:  ruleRegex(`(\w+)=(?:"([^"]*)"|([^"\n]*))`),
+	Call:      ruleRegex(`(\w+)[\t ]*=[\t ]*\${(?:\s+)?(\w+)(?:\s+)?([^}]+)?}`),
+	Variable:  ruleRegex(`(\w+)[\t ]*=(?:[\t ]*"([^"]*)"|([^"\n]*))`),
 	Rule:      ruleRegex(`(\w+):([\w ]*)`),
 	Action:    ruleRegex(`[^\n]+`),
 }

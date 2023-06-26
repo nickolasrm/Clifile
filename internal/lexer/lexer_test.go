@@ -76,6 +76,11 @@ var _ = Describe("Lexer", func() {
 					SnapshotTokens("VAR=\"val\nval\"")
 				})
 			})
+			When("space or tabs appear around equal", func() {
+				It("should return a variable token", func() {
+					SnapshotTokens("VAR \t=  \t\"ASD\"")
+				})
+			})
 		})
 	})
 	When("a call is passed", func() {
@@ -85,6 +90,11 @@ var _ = Describe("Lexer", func() {
 		When("multiple lines are between curly braces", func() {
 			It("should return a call token", func() {
 				SnapshotTokens("VAR=${func\nfunc}")
+			})
+		})
+		When("space or tabs appear around equal", func() {
+			It("should return a call token", func() {
+				SnapshotTokens("VAR\t =  \t${func}")
 			})
 		})
 	})
