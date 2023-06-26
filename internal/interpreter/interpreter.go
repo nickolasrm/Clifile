@@ -2,7 +2,7 @@ package interpreter
 
 import (
 	"fmt"
-	"os"
+	"regexp"
 	"strings"
 
 	"github.com/nickolasrm/clifile/internal/parser"
@@ -11,39 +11,24 @@ import (
 )
 
 type Flag struct {
-	Name    string
-	Default string
-	Type    string
-	Prompt  string
+	Name       string
+	Doc        string
+	Default    string
+	Type       string
+	Prompt     string
+	Validation string
+	Init       string
+}
+
+func (f *Flag) Run(value string, exist bool) string {
+	if !exist {
+
+	}
+	return "TODO"
 }
 
 type Execution struct {
 	Program *parser.Program
-}
-
-func (e *Execution) GetVariableValue(name string) (string, error) {
-	variable, ok := e.Program.Variables[name]
-	if !ok {
-		return "", fmt.Errorf("variable '%s' not found", name)
-	}
-	return variable.Value, nil
-}
-
-func (e *Execution) GetFlag(name string) (*Flag, error) {
-	call, ok := e.Program.Calls[name]
-	if !ok {
-		return nil, fmt.Errorf("flag '%s' not found", name)
-	}
-	if call.Function != "flag" {
-		return nil, fmt.Errorf("call '%s' is not a flag", name)
-	}
-	flag := Flag{
-		Name:    name,
-		Default: call.Arguments["default"],
-		Type:    call.Arguments["type"],
-		Prompt:  call.Arguments["prompt"],
-	}
-	return &flag, nil
 }
 
 func (e *Execution) buildGroup(rule *parser.Rule) *cobra.Command {
@@ -55,15 +40,74 @@ func (e *Execution) buildGroup(rule *parser.Rule) *cobra.Command {
 	}
 }
 
+func (e *Execution) findReplacements(code string) []string {
+	pattern := regexp.MustCompile(`[^\$]\${(\w+)}`)
+	matches := pattern.FindAllStringSubmatch(code, -1)
+	replacements := make([]string, len(matches))
+	for i, match := range matches {
+		replacements[i] = match[1]
+	}
+	return replacements
+}
+
+func (e *Execution) replaceVariables(actions string, variables []string) (string, error) {
+	for _, name := range variables {
+		if variable, ok := e.Program.Variables[name]; ok {
+			actions = strings.ReplaceAll(actions, "${"+name+"}", variable.Value)
+		} else {
+			return "", fmt.Errorf("could not replacement for '%s'", name)
+		}
+	}
+	actions = strings.ReplaceAll(actions, "$$", "$")
+	return actions, nil
+}
+
+func (e *Execution) buildFlags(cmd *cobra.Command, flags []string) []*Flag {
+	replacements := make([]*Flag, 0)
+	for _, name := range flags {
+		if call, ok := e.Program.Calls[name]; ok && call.Function == "flag" {
+			flag := &Flag{
+				Name:       call.Name,
+				Doc:        call.Arguments["doc"],
+				Default:    call.Arguments["default"],
+				Type:       call.Arguments["type"],
+				Prompt:     call.Arguments["prompt"],
+				Validation: call.Arguments["validation"],
+			}
+			replacements = append(replacements, flag)
+			cmd.Flags().String(flag.Name, flag.Default, flag.Doc)
+		}
+	}
+	return replacements
+}
+
 func (e *Execution) buildCommand(rule *parser.Rule) *cobra.Command {
 	cmd := e.buildGroup(rule)
-	cmd.Run = func(cmd *cobra.Command, args []string) {
-		util.Shell(rule.Actions)
+	replacements := e.findReplacements(rule.Actions)
+	flags := e.buildFlags(cmd, replacements)
+	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		var err error
+		for _, flag := range flags {
+			value, parseError := cmd.Flags().GetString(flag.Name)
+			exist := parseError == nil
+			e.Program.Variables[flag.Name] = &parser.Variable{
+				Name:  flag.Name,
+				Value: flag.Run(value, exist),
+			}
+		}
+		actions := rule.Actions
+		if actions, err = e.replaceVariables(actions, replacements); err != nil {
+			return err
+		}
+		if err = util.Shell(actions); err != nil {
+			return err
+		}
+		return nil
 	}
 	return cmd
 }
 
-func (e *Execution) buildMain() *cobra.Command {
+func (e *Execution) buildMain() (*cobra.Command, error) {
 	main := &cobra.Command{
 		Use:  "cli",
 		Long: e.Program.Doc,
@@ -84,15 +128,14 @@ func (e *Execution) buildMain() *cobra.Command {
 	for _, rule := range e.Program.Rules {
 		recursion(main, rule)
 	}
-	return main
+	return main, nil
 }
 
 func (e *Execution) Run() {
-	main := e.buildMain()
-	if err := main.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	main, err := e.buildMain()
+	util.TryThrow(err)
+	err = main.Execute()
+	util.TryThrow(err)
 }
 
 func Interpret(program *parser.Program) *Execution {

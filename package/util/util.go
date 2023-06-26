@@ -17,7 +17,7 @@ func TryThrow(err error) {
 }
 
 // Shell executes a script depending on what os you are
-func Shell(script string) {
+func Shell(script string) error {
 	var shellCmd *exec.Cmd
 
 	switch runtime.GOOS {
@@ -26,10 +26,10 @@ func Shell(script string) {
 	case "linux", "darwin":
 		shellCmd = exec.Command(os.Getenv("SHELL"), "-c", script)
 	default:
-		TryThrow(fmt.Errorf("unsupported operating system '%s'", runtime.GOOS))
+		return fmt.Errorf("unsupported operating system '%s'", runtime.GOOS)
 	}
 	shellCmd.Stdin = os.Stdin
 	shellCmd.Stdout = os.Stdout
 	shellCmd.Stderr = os.Stderr
-	TryThrow(shellCmd.Run())
+	return shellCmd.Run()
 }
