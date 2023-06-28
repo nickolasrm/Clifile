@@ -41,11 +41,13 @@ func (e *Execution) buildGroup(rule *parser.Rule) *cobra.Command {
 }
 
 func (e *Execution) findReplacements(code string) []string {
-	pattern := regexp.MustCompile(`[^\$]\${(\w+)}`)
+	pattern := regexp.MustCompile(`(\$+)\{(\w+)\}`)
 	matches := pattern.FindAllStringSubmatch(code, -1)
-	replacements := make([]string, len(matches))
-	for i, match := range matches {
-		replacements[i] = match[1]
+	replacements := make([]string, 0)
+	for _, match := range matches {
+		if len(match[1]) % 2 == 1 {
+			replacements = append(replacements, match[2])
+		}
 	}
 	return replacements
 }
