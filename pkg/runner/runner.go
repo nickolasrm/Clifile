@@ -7,7 +7,7 @@ import (
 	"github.com/nickolasrm/clifile/internal/interpreter"
 	"github.com/nickolasrm/clifile/internal/lexer"
 	"github.com/nickolasrm/clifile/internal/parser"
-	"github.com/nickolasrm/clifile/package/util"
+	"github.com/nickolasrm/clifile/pkg/util"
 )
 
 // ReadCode reads the Clifile reference and returns its contents or an error
