@@ -12,29 +12,31 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func TestLexer(t *testing.T) {
+func TestFlag(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Flag Suite")
 }
 
-type TestSurvey struct{}
+// TestPrompt is the fake Prompt for the survey ask function
+type TestPrompt struct{}
 
-func (t *TestSurvey) Prompt(config *survey.PromptConfig) (interface{}, error) {
+func (t *TestPrompt) Prompt(config *survey.PromptConfig) (interface{}, error) {
 	return "test", nil
 }
 
-func (t *TestSurvey) Cleanup(cfg *survey.PromptConfig, val interface{}) error {
+func (t *TestPrompt) Cleanup(cfg *survey.PromptConfig, val interface{}) error {
 	return nil
 }
 
-func (t *TestSurvey) Error(cfg *survey.PromptConfig, err error) error {
+func (t *TestPrompt) Error(cfg *survey.PromptConfig, err error) error {
 	return nil
 }
 
+// TestLogic is the fake logic for running the flag
 type TestLogic struct{}
 
 func (*TestLogic) Prompt(data *flag.FlagData) survey.Prompt {
-	return &TestSurvey{}
+	return &TestPrompt{}
 }
 
 func (*TestLogic) Validator(data *flag.FlagData) *regexp.Regexp {
@@ -45,6 +47,7 @@ func (*TestLogic) Parse(data *flag.FlagData, value interface{}) string {
 	return value.(string)
 }
 
+// CreateFlag create a Flag object from a map of arguments
 func CreateFlag(args map[string]string) (*flag.Flag, error) {
 	name := args["name"]
 	if name == "" {
@@ -62,6 +65,8 @@ func CreateFlag(args map[string]string) (*flag.Flag, error) {
 	)
 }
 
+// SnapshotFlag is captures the current structure of the Flag and its child objects
+// alongside the parsed output
 func SnapshotFlag(args map[string]string, output interface{}) {
 	f, err := CreateFlag(args)
 	t := GinkgoT()
