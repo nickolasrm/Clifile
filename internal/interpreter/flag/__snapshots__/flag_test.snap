@@ -1,0 +1,140 @@
+
+[Flag when type is defined when type is input should return a flag with an input survey - 1]
+map[string]interface {}{
+    "err":             nil,
+    "flagData":        &flag.FlagData{name:"flag", defaultValue:"", Type:"input", doc:"", question:"", validation:"", init:""},
+    "flagLogic":       &flag.FlagLogicInput{},
+    "flagLogicParse":  "test",
+    "flagLogicPrompt": &survey.Input{
+        Renderer:      survey.Renderer{},
+        Message:       "flag",
+        Default:       "",
+        Help:          "",
+        Suggest:       func(string) []string {...},
+        answer:        "",
+        typedAnswer:   "",
+        options:       nil,
+        selectedIndex: 0,
+        showingHelp:   false,
+    },
+    "flagLogicValidator": ".*",
+}
+---
+
+[Flag when type is defined when type is multiline should return a flag with a multiline survey - 1]
+map[string]interface {}{
+    "err":             nil,
+    "flagData":        &flag.FlagData{name:"flag", defaultValue:"", Type:"multiline", doc:"", question:"", validation:"", init:""},
+    "flagLogic":       &flag.FlagLogicMultiLine{},
+    "flagLogicParse":  "test",
+    "flagLogicPrompt": &survey.Multiline{
+        Renderer: survey.Renderer{},
+        Message:  "flag",
+        Default:  "",
+        Help:     "",
+    },
+    "flagLogicValidator": ".*",
+}
+---
+
+[Flag when type is defined when type is confirm should return a confirm survey - 1]
+map[string]interface {}{
+    "err":             nil,
+    "flagData":        &flag.FlagData{name:"flag", defaultValue:"", Type:"confirm", doc:"", question:"", validation:"", init:""},
+    "flagLogic":       &flag.FlagLogicConfirm{},
+    "flagLogicParse":  "n",
+    "flagLogicPrompt": &survey.Confirm{
+        Renderer: survey.Renderer{},
+        Message:  "flag",
+        Default:  false,
+        Help:     "",
+    },
+    "flagLogicValidator": ".*",
+}
+---
+
+[Flag when type is defined when type is password should return a flag with a password survey - 1]
+map[string]interface {}{
+    "err":             nil,
+    "flagData":        &flag.FlagData{name:"flag", defaultValue:"", Type:"password", doc:"", question:"", validation:"", init:""},
+    "flagLogic":       &flag.FlagLogicPassword{},
+    "flagLogicParse":  "test",
+    "flagLogicPrompt": &survey.Password{
+        Renderer: survey.Renderer{},
+        Message:  "flag",
+        Help:     "",
+    },
+    "flagLogicValidator": ".*",
+}
+---
+
+[Flag when type is defined when type is select should return a flag with a select survey - 1]
+map[string]interface {}{
+    "err":             nil,
+    "flagData":        &flag.FlagData{name:"flag", defaultValue:"", Type:"select", doc:"", question:"", validation:"", init:""},
+    "flagLogic":       &flag.FlagLogicSelect{},
+    "flagLogicParse":  "test",
+    "flagLogicPrompt": &survey.Select{
+        Renderer:      survey.Renderer{},
+        Message:       "flag",
+        Options:       {""},
+        Default:       nil,
+        Help:          "",
+        PageSize:      0,
+        VimMode:       false,
+        FilterMessage: "",
+        Filter:        func(string, string, int) bool {...},
+        Description:   func(string, int) string {...},
+        filter:        "",
+        selectedIndex: 0,
+        showingHelp:   false,
+    },
+    "flagLogicValidator": ".*",
+}
+---
+
+[Flag when type is defined when type is editor should return a flag with an editor survey - 1]
+map[string]interface {}{
+    "err":             nil,
+    "flagData":        &flag.FlagData{name:"flag", defaultValue:"", Type:"editor", doc:"", question:"", validation:"", init:""},
+    "flagLogic":       &flag.FlagLogicEditor{},
+    "flagLogicParse":  "test",
+    "flagLogicPrompt": &survey.Editor{
+        Renderer:      survey.Renderer{},
+        Message:       "flag",
+        Default:       "",
+        Help:          "",
+        Editor:        "",
+        HideDefault:   false,
+        AppendDefault: false,
+        FileName:      "",
+    },
+    "flagLogicValidator": ".*",
+}
+---
+
+[Flag when type is defined when type is multiselect should return a flag with a multiselect survey - 1]
+map[string]interface {}{
+    "err":             nil,
+    "flagData":        &flag.FlagData{name:"flag", defaultValue:"", Type:"multiselect", doc:"", question:"", validation:"", init:""},
+    "flagLogic":       &flag.FlagLogicMultiSelect{},
+    "flagLogicParse":  "\"a\" \"b\"",
+    "flagLogicPrompt": &survey.MultiSelect{
+        Renderer:      survey.Renderer{},
+        Message:       "flag",
+        Options:       {""},
+        Default:       nil,
+        Help:          "",
+        PageSize:      0,
+        VimMode:       false,
+        FilterMessage: "",
+        Filter:        func(string, string, int) bool {...},
+        Description:   func(string, int) string {...},
+        filter:        "",
+        selectedIndex: 0,
+        checked:       {},
+        showingHelp:   false,
+    },
+    "flagLogicValidator": ".*",
+}
+---

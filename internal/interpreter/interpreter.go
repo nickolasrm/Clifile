@@ -5,140 +5,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/AlecAivazis/survey/v2"
+	"github.com/nickolasrm/clifile/internal/interpreter/flag"
 	"github.com/nickolasrm/clifile/internal/parser"
 	"github.com/nickolasrm/clifile/pkg/util"
 	"github.com/spf13/cobra"
 )
-
-type FlagType uint8
-
-const (
-	FlagString = FlagType(iota)
-	FlagText
-	FlagConfirm
-	FlagSelect
-)
-
-var FlagTypeMap = map[string]FlagType{
-	"string":    FlagString,
-	"multiline": FlagText,
-	"confirm":   FlagConfirm,
-	"select":    FlagSelect,
-}
-
-// TODO: move to another file
-type Flag struct {
-	Name       string
-	Doc        string
-	Default    string
-	Type       FlagType
-	Question   string
-	Validation *regexp.Regexp
-	Init       string
-}
-
-func createValidator(validation string, flagType FlagType) (*regexp.Regexp, error) {
-	switch flagType {
-	case FlagConfirm:
-		return regexp.Compile(fmt.Sprintf("%v|%v", true, false))
-	default:
-		if validation == "" {
-			return regexp.Compile(`.*`)
-		}
-	}
-	return regexp.Compile(validation)
-}
-
-func createFlag(
-	name string,
-	doc string,
-	defaultValue string,
-	flagType string,
-	question string,
-	validation string,
-	init string,
-) (*Flag, error) {
-	if flagType == "" {
-		flagType = "string"
-	}
-	parsedType, ok := FlagTypeMap[flagType]
-	if !ok {
-		return nil, fmt.Errorf("invalid flag type '%s'", flagType)
-	}
-	validator, err := createValidator(validation, parsedType)
-	if err != nil {
-		return nil, err
-	}
-	return &Flag{
-		Name:       name,
-		Doc:        doc,
-		Default:    defaultValue,
-		Type:       parsedType,
-		Question:   question,
-		Validation: validator,
-		Init:       init,
-	}, nil
-}
-
-func (f *Flag) docstring() string {
-	if f.Default != "" {
-		return fmt.Sprintf("%s (default: %s)", f.Doc, f.Default)
-	}
-	return f.Doc
-}
-
-func (f *Flag) validate(value string) error {
-	if !f.Validation.MatchString(value) {
-		return fmt.Errorf("invalid value '%s' for flag '%s'", value, f.Name)
-	}
-	return nil
-}
-
-func (f *Flag) prompt() string {
-	if f.Question != "" {
-		return f.Question
-	}
-	return f.Name
-}
-
-func (f *Flag) ask() string {
-	var result interface{}
-	var prompt survey.Prompt
-	switch f.Type {
-	case FlagString:
-		prompt = &survey.Input{
-			Help:    f.Doc,
-			Message: f.prompt(),
-		}
-	case FlagText:
-		prompt = &survey.Multiline{
-			Help:    f.Doc,
-			Message: f.prompt(),
-		}
-	case FlagConfirm:
-		prompt = &survey.Confirm{
-			Help:    f.Doc,
-			Message: f.prompt(),
-		}
-	}
-	if exited := survey.AskOne(prompt, &result); exited != nil {
-		util.TryThrow(exited)
-	}
-	return fmt.Sprintf("%v", result)
-}
-
-func (f *Flag) Run(value string, exist bool) (string, error) {
-	if exist {
-		return value, f.validate(value)
-	} else {
-		value = f.Default
-		for f.validate(value) != nil {
-			value = f.ask()
-		}
-	}
-	return value, nil
-}
 
 type Execution struct {
 	Program *parser.Program
@@ -153,13 +24,14 @@ func (e *Execution) buildGroup(rule *parser.Rule) *cobra.Command {
 	}
 }
 
-// TODO: Return set
 func (e *Execution) findReplacements(code string) []string {
 	pattern := regexp.MustCompile(`(\$+)\{(\w+)\}`)
 	matches := pattern.FindAllStringSubmatch(code, -1)
+	unique := make(map[string]bool)
 	replacements := make([]string, 0)
 	for _, match := range matches {
-		if len(match[1])%2 == 1 {
+		if len(match[1])%2 == 1 && !unique[match[2]] {
+			unique[match[2]] = true
 			replacements = append(replacements, match[2])
 		}
 	}
@@ -178,11 +50,11 @@ func (e *Execution) replaceVariables(actions string, variables []string) (string
 	return actions, nil
 }
 
-func (e *Execution) buildFlags(cmd *cobra.Command, flags []string) ([]*Flag, error) {
-	replacements := make([]*Flag, 0)
+func (e *Execution) buildFlags(cmd *cobra.Command, flags []string) ([]*flag.Flag, error) {
+	replacements := make([]*flag.Flag, 0)
 	for _, name := range flags {
 		if call, ok := e.Program.Calls[name]; ok && call.Function == "flag" {
-			flag, err := createFlag(
+			flag, err := flag.CreateFlag(
 				call.Name,
 				call.Arguments["doc"],
 				call.Arguments["default"],
@@ -190,12 +62,12 @@ func (e *Execution) buildFlags(cmd *cobra.Command, flags []string) ([]*Flag, err
 				call.Arguments["question"],
 				call.Arguments["validation"],
 				call.Arguments["init"],
+				cmd,
 			)
 			if err != nil {
 				return nil, err
 			}
 			replacements = append(replacements, flag)
-			cmd.Flags().String(flag.Name, "", flag.docstring())
 		}
 	}
 	return replacements, nil
@@ -212,14 +84,12 @@ func (e *Execution) buildCommand(rule *parser.Rule) (*cobra.Command, error) {
 		var value string
 		var err error
 		for _, flag := range flags {
-			value, _ = cmd.Flags().GetString(flag.Name)
-			exist := cmd.Flags().Lookup(flag.Name).Changed
-			value, err = flag.Run(value, exist)
+			value, err = flag.Get()
 			if err != nil {
 				return err
 			}
-			e.Program.Variables[flag.Name] = &parser.Variable{
-				Name:  flag.Name,
+			e.Program.Variables[flag.Replacement()] = &parser.Variable{
+				Name:  flag.Replacement(),
 				Value: value,
 			}
 		}
