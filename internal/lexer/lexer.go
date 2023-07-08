@@ -55,22 +55,49 @@ var Rules = map[Token]*regexp.Regexp{
 // The first element of the slice is the entire match.
 // The remaining elements are the capture groups.
 type Match struct {
-	Type  Token
-	Value []string
+	type_ Token
+	value []string
+}
+
+// NewMatch returns a new match with the given token and value.
+func NewMatch(token Token, value []string) *Match {
+	return &Match{
+		type_: token,
+		value: value,
+	}
+}
+
+// Type returns the type of the match.
+func (m *Match) Type() Token {
+	return m.type_
+}
+
+// Value returns the capture groups of the match.
+func (m *Match) Value(i int) string {
+	return m.value[i]
+}
+
+// Lexer is a struct that represents the lexer.
+type Lexer struct {
+	code string
+}
+
+// NewLexer is a helper function to create a new lexer.
+func NewLexer(code string) *Lexer {
+	lexer := Lexer{code}
+	return &lexer
 }
 
 // Lex reads a string and tokenizes it into a stream of tokens and errors.
-// This function is the first step in the interpreter pipeline. It is used
-// to identify the pieces of code that contain meaningful structure for
-// parsing into a syntax tree.
-func Lex(code string) ([]*Match, error) {
+func (l *Lexer) Lex() ([]*Match, error) {
+	code := l.code
 	tokens := make([]*Match, 0)
 	for code != "" {
 		var match []string
 		for token := Token(0); token < Token(Unknown); token++ {
 			code = strings.Trim(code, " ")
 			if match = Rules[token].FindStringSubmatch(code); match != nil {
-				tokens = append(tokens, &Match{token, match})
+				tokens = append(tokens, NewMatch(token, match))
 				code = code[len(match[0]):]
 				break
 			}
@@ -80,4 +107,13 @@ func Lex(code string) ([]*Match, error) {
 		}
 	}
 	return tokens, nil
+}
+
+// Lex reads a string and tokenizes it into a stream of tokens and errors.
+// This function is the first step in the interpreter pipeline. It is used
+// to identify the pieces of code that contain meaningful structure for
+// parsing into a syntax tree.
+func Lex(code string) ([]*Match, error) {
+	lexer := NewLexer(code)
+	return lexer.Lex()
 }

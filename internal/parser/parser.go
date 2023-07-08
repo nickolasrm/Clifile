@@ -7,105 +7,44 @@ import (
 	"regexp"
 
 	"github.com/nickolasrm/clifile/internal/lexer"
+	"github.com/nickolasrm/clifile/internal/models/call"
+	"github.com/nickolasrm/clifile/internal/models/program"
+	"github.com/nickolasrm/clifile/internal/models/rule"
+	"github.com/nickolasrm/clifile/internal/models/variable"
 )
 
-// Variable is a struct that represents a variable.
-// it contains the name of the variable and the value it holds
-type Variable struct {
-	Name  string
-	Value string
+// Parser is a struct that represents the parser
+type Parser struct {
+	tokens  []*lexer.Match
+	program *program.Program
 }
 
-func parseVariable(match *lexer.Match) (*Variable, error) {
-	name := match.Value[1]
-	value := match.Value[2]
-	if value == "" {
-		value = match.Value[3]
+// NewParser is a helper function to create a new parser
+func NewParser(matches []*lexer.Match) *Parser {
+	return &Parser{
+		tokens:  matches,
+		program: program.NewProgram(),
 	}
-	return &Variable{Name: name, Value: value}, nil
 }
 
-// Call is a struct that represents a function call.
-// it contains the name of the function, the function itself
-// and the arguments that the call received
-type Call struct {
-	Name      string
-	Function  string
-	Arguments map[string]string
-}
-
-func parseCall(match *lexer.Match) (*Call, error) {
-	name := match.Value[1]
-	function := match.Value[2]
-	argumentString := match.Value[3]
-	argumentTokens, err := lexer.Lex(argumentString)
-	if err != nil {
-		return nil, err
-	}
-	keywords := make(map[string]string)
-	for _, submatch := range argumentTokens {
-		switch submatch.Type {
-		case lexer.Variable:
-			variable, err := parseVariable(submatch)
-			if err != nil {
-				return nil, fmt.Errorf(
-					"invalid parameter near '%s'",
-					submatch.Value[0],
-				)
-			}
-			keywords[variable.Name] = variable.Value
-		case lexer.Line, lexer.Comment, lexer.Indent:
-			continue
-		default:
-			return nil, fmt.Errorf(
-				"unexpected syntax inside function call near '%s'",
-				submatch.Value[0],
-			)
-		}
-	}
-	return &Call{
-		Name:      name,
-		Function:  function,
-		Arguments: keywords,
-	}, nil
-}
-
-// Rule is a struct that represents a group of actions and its properties.
-// it contains the name of the rule, the positional arguments order,
-// the docstring, the actions the rule will execute and its child rules if it is a group
-type Rule struct {
-	Name       string
-	Positional []string
-	Doc        string
-	Actions    string
-	Rules      map[string]*Rule
-}
-
-// Program is a struct that represents the entire program.
-// it contains the variables, the function calls and the rules
-type Program struct {
-	Doc       string
-	Variables map[string]*Variable
-	Calls     map[string]*Call
-	Rules     map[string]*Rule
-}
-
-func (p *Program) parseMetadata(matches []*lexer.Match) []*lexer.Match {
-	if matches[0].Type == lexer.Docstring {
+// parseDoc parses the documentation of the program if it exists
+func (p *Parser) parseDoc() {
+	tokens := p.tokens
+	if tokens[0].Type() == lexer.Docstring {
 		programDoc := ""
 		var i int
 		var match *lexer.Match
 		lines := 0
-		for i, match = range matches {
-			switch match.Type {
+		for i, match = range tokens {
+			switch match.Type() {
 			case lexer.Docstring:
 				if lines > 1 {
 					goto Exit
 				}
-				programDoc += match.Value[1] + "\n"
+				programDoc += match.Value(1) + "\n"
 				lines = 0
 			case lexer.Line:
-				lines = len(match.Value[0])
+				lines = len(match.Value(0))
 				continue
 			default:
 				goto Exit
@@ -113,123 +52,167 @@ func (p *Program) parseMetadata(matches []*lexer.Match) []*lexer.Match {
 		}
 	Exit:
 		if programDoc != "" {
-			p.Doc = programDoc
-			matches = matches[i:]
+			p.program.SetDoc(programDoc)
+			tokens = tokens[i:]
 		}
 	}
-	return matches
+	p.tokens = tokens
 }
 
-// Parse parses a list of lexer matches into a structured program.
-// it returns a pointer to a Program struct and an error if any
-// semantic error is found
-func Parse(matches []*lexer.Match) (*Program, error) {
-	program := &Program{
-		Doc: `Software Command Line Interface (CLI)
-Use this as shortcut for user-defined commands`,
-		Variables: make(map[string]*Variable),
-		Calls:     make(map[string]*Call),
-		Rules:     make(map[string]*Rule),
+// parseVariable creates a variable from a variable lexer match
+func parseVariable(match *lexer.Match) (*variable.Variable, error) {
+	name := match.Value(1)
+	value := match.Value(2)
+	if value == "" {
+		value = match.Value(3)
 	}
-	matches = program.parseMetadata(matches)
+	return variable.NewVariable(name, value), nil
+}
 
+// parseCall creates a call from a call lexer match
+func parseCall(match *lexer.Match) (*call.Call, error) {
+	name := match.Value(1)
+	function := match.Value(2)
+	argumentString := match.Value(3)
+	argumentTokens, err := lexer.Lex(argumentString)
+	if err != nil {
+		return nil, err
+	}
+	keywords := make(map[string]string)
+	for _, submatch := range argumentTokens {
+		switch submatch.Type() {
+		case lexer.Variable:
+			variable, err := parseVariable(submatch)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"invalid parameter near '%s'",
+					submatch.Value(0),
+				)
+			}
+			keywords[variable.Name()] = variable.Value()
+		case lexer.Line, lexer.Comment, lexer.Indent:
+			continue
+		default:
+			return nil, fmt.Errorf(
+				"unexpected syntax inside function call near '%s'",
+				submatch.Value(0),
+			)
+		}
+	}
+	return call.NewCall(name, function, keywords), nil
+}
+
+// parseBody parses the body of the program and creates the rules
+// and variables
+func (p *Parser) parseBody() error {
+	program := p.program
 	indent := 0
-	queue := make([]*Rule, 0)
-	docstring := ""
-	var parent *Rule = nil
-	var rule *Rule = nil
+	ruleBranch := make([]*rule.Rule, 0)
+	ruleDoc := ""
+	var parentRule *rule.Rule = nil
+	var currentRule *rule.Rule = nil
 
-	for _, match := range matches {
+	for _, match := range p.tokens {
 		if indent > 0 {
-			switch match.Type {
+			switch match.Type() {
 			case lexer.Variable, lexer.Call:
-				match = &lexer.Match{
-					Type:  lexer.Action,
-					Value: []string{match.Value[0]},
-				}
+				match = lexer.NewMatch(lexer.Action, []string{match.Value(0)})
 			default:
 				break
 			}
 		}
-		switch match.Type {
+		switch match.Type() {
 		case lexer.Line:
 			indent = 0
 			continue
 		case lexer.Comment:
 			continue
 		case lexer.Indent:
-			indent = len(match.Value[0])
+			indent = len(match.Value(0))
 		case lexer.Variable:
 			variable, err := parseVariable(match)
 			if err != nil {
-				return nil, err
+				return err
 			}
-			program.Variables[variable.Name] = variable
+			program.AddVariable(variable)
 		case lexer.Call:
 			call, err := parseCall(match)
 			if err != nil {
-				return nil, err
+				return err
 			}
-			program.Calls[call.Name] = call
+			program.AddCall(call)
 		case lexer.Docstring:
-			if indent > len(queue) {
-				return nil, fmt.Errorf(
+			if indent > len(ruleBranch) {
+				return fmt.Errorf(
 					"overly indented docstring near '%s'",
-					match.Value[0],
+					match.Value(0),
 				)
 			}
-			docstring += match.Value[1] + "\n"
+			ruleDoc += match.Value(1) + "\n"
 		case lexer.Rule:
-			if indent > len(queue) {
-				return nil, fmt.Errorf(
+			if indent > len(ruleBranch) {
+				return fmt.Errorf(
 					"overly indented rule near '%s'",
-					match.Value[0],
+					match.Value(0),
 				)
 			}
-			queue = queue[:indent]
+			ruleBranch = ruleBranch[:indent]
 			if indent == 0 {
-				parent = nil
+				parentRule = nil
 			} else {
-				parent = queue[len(queue)-1]
+				parentRule = ruleBranch[len(ruleBranch)-1]
 			}
-			rule = &Rule{
-				Name:       "",
-				Positional: nil,
-				Doc:        docstring,
-				Actions:    "",
-				Rules:      make(map[string]*Rule),
-			}
-			queue = append(queue, rule)
-			docstring = ""
-			name := match.Value[1]
-			rule.Name = name
-			rule.Positional = regexp.MustCompile(`\w+`).FindAllString(
-				match.Value[2], -1,
+			name := match.Value(1)
+			positionals := regexp.MustCompile(`\w+`).FindAllString(
+				match.Value(2), -1,
 			)
-			if parent != nil {
-				if parent.Actions != "" {
-					return nil, fmt.Errorf(
+			currentRule = rule.NewRule(name, positionals, ruleDoc, "")
+			ruleBranch = append(ruleBranch, currentRule)
+
+			if parentRule != nil {
+				if parentRule.Actions() != "" {
+					return fmt.Errorf(
 						"can't add nested rules into a rule '%s' because it has actions",
-						parent.Name,
+						parentRule.Name(),
 					)
 				}
-				parent.Rules[name] = rule
+				parentRule.AddRule(currentRule)
 			} else {
-				program.Rules[name] = rule
+				program.AddRule(currentRule)
 			}
 		case lexer.Action:
-			if indent < len(queue) {
-				return nil, fmt.Errorf("bad indentation near '%s'", match.Value[0])
+			if indent < len(ruleBranch) {
+				return fmt.Errorf("bad indentation near '%s'", match.Value(0))
 			}
-			if rule == nil {
-				return nil, fmt.Errorf(
+			if currentRule == nil {
+				return fmt.Errorf(
 					"action outside of rule near '%s'",
-					match.Value[0],
+					match.Value(0),
 				)
 			}
-			rule.Actions += match.Value[0] + "\n"
+			currentRule.AppendActions(match.Value(0) + "\n")
 		}
 	}
+	return nil
+}
 
-	return program, nil
+// Parse parses a list of lexer matches into a structured program.
+func (p *Parser) Parse() (*program.Program, error) {
+	if len(p.tokens) == 0 {
+		return nil, fmt.Errorf("no tokens to parse")
+	}
+	p.parseDoc()
+	err := p.parseBody()
+	if err != nil {
+		return nil, err
+	}
+	return p.program, nil
+}
+
+// Parse parses a list of lexer matches into a structured program.
+// it returns a pointer to a Program struct and an error if any
+// semantic error is found
+func Parse(tokens []*lexer.Match) (*program.Program, error) {
+	parser := NewParser(tokens)
+	return parser.Parse()
 }
