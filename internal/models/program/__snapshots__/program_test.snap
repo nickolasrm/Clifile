@@ -1,0 +1,164 @@
+
+[Program when a new program is created should return a program type - 1]
+[]interface {}{
+    &program.Program{
+        doc:       "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
+        variables: {
+        },
+        calls: {
+        },
+        rules: {
+        },
+    },
+}
+---
+
+[Program when a new program is created when Doc() is called should return the program doc - 1]
+[]interface {}{
+    "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
+}
+---
+
+[Program when a new program is created when SetDoc() is called should replace the program doc - 1]
+[]interface {}{
+    &program.Program{
+        doc:       "new doc",
+        variables: {
+        },
+        calls: {
+        },
+        rules: {
+        },
+    },
+}
+---
+
+[Program when a new program is created when Call() is called when the passed call exists should return the call - 1]
+[]interface {}{
+    &call.Call{
+        name:      "call",
+        function:  "fn",
+        arguments: {},
+    },
+}
+---
+
+[Program when a new program is created when AddCall() is called should add the call to the program - 1]
+[]interface {}{
+    &program.Program{
+        doc:       "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
+        variables: {
+        },
+        calls: {
+            "call": &call.Call{
+                name:      "call",
+                function:  "fn",
+                arguments: {},
+            },
+        },
+        rules: {
+        },
+    },
+}
+---
+
+[Program when a new program is created when Rules() is called when the program has rules should return the rules - 1]
+[]interface {}{
+    []*rule.Rule{
+        &rule.Rule{
+            name:       "rule",
+            positional: {"pos1"},
+            doc:        "doc",
+            actions:    "action\n",
+            rules:      {
+            },
+        },
+    },
+}
+---
+
+[Program when a new program is created when AddRule() is called should add the rule to the program - 1]
+[]interface {}{
+    &program.Program{
+        doc:       "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
+        variables: {
+        },
+        calls: {
+        },
+        rules: {
+            "rule": &rule.Rule{
+                name:       "rule",
+                positional: {"pos1"},
+                doc:        "doc",
+                actions:    "action\n",
+                rules:      {
+                },
+            },
+        },
+    },
+}
+---
+
+[Program when a new program is created when Rule() is called when the passed rule exists should return the rule - 1]
+[]interface {}{
+    &rule.Rule{
+        name:       "rule",
+        positional: {"pos1"},
+        doc:        "doc",
+        actions:    "action\n",
+        rules:      {
+        },
+    },
+}
+---
+
+[Program when a new program is created when AddVariable() is called should add the variable to the program - 1]
+[]interface {}{
+    &program.Program{
+        doc:       "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
+        variables: {
+            "var": &variable.Variable{name:"var", value:"value"},
+        },
+        calls: {
+        },
+        rules: {
+        },
+    },
+}
+---
+
+[Program when a new program is created when Variable() is called when the passed variable exists should return the variable - 1]
+[]interface {}{
+    &variable.Variable{name:"var", value:"value"},
+}
+---
+
+[Program when a new program is created when SetVariable() is called when the passed variable exists should set the variable value - 1]
+[]interface {}{
+    &program.Program{
+        doc:       "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
+        variables: {
+            "var": &variable.Variable{name:"var", value:"new value"},
+        },
+        calls: {
+        },
+        rules: {
+        },
+    },
+}
+---
+
+[Program when a new program is created when SetVariable() is called when the passed variable does not exist should create the variable - 1]
+[]interface {}{
+    &program.Program{
+        doc:       "Software Command Line Interface (CLI)\nUse this as shortcut for user-defined commands",
+        variables: {
+            "var": &variable.Variable{name:"var", value:"value"},
+        },
+        calls: {
+        },
+        rules: {
+        },
+    },
+}
+---

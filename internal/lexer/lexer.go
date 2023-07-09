@@ -78,19 +78,16 @@ func (m *Match) Value(i int) string {
 }
 
 // Lexer is a struct that represents the lexer.
-type Lexer struct {
-	code string
-}
+type Lexer struct{}
 
 // NewLexer is a helper function to create a new lexer.
-func NewLexer(code string) *Lexer {
-	lexer := Lexer{code}
+func NewLexer() *Lexer {
+	lexer := Lexer{}
 	return &lexer
 }
 
 // Lex reads a string and tokenizes it into a stream of tokens and errors.
-func (l *Lexer) Lex() ([]*Match, error) {
-	code := l.code
+func (l *Lexer) Lex(code string) ([]*Match, error) {
 	tokens := make([]*Match, 0)
 	for code != "" {
 		var match []string
@@ -114,6 +111,6 @@ func (l *Lexer) Lex() ([]*Match, error) {
 // to identify the pieces of code that contain meaningful structure for
 // parsing into a syntax tree.
 func Lex(code string) ([]*Match, error) {
-	lexer := NewLexer(code)
-	return lexer.Lex()
+	lexer := NewLexer()
+	return lexer.Lex(code)
 }

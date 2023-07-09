@@ -359,3 +359,388 @@
     },
 }
 ---
+
+[Match when a new match is created when Type() is called should return the type of the match - 1]
+[]interface {}{
+    lexer.Token(0x7),
+}
+---
+
+[Match when a new match is created when Value() is called when the index exists should return the first value of the match - 1]
+[]interface {}{
+    "echo Hello World",
+}
+---
+
+[Lexer Lex when a comment is passed should return a comment token - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        type_: 0x3,
+        value: {"# This is a comment", " This is a comment"},
+    },
+}
+---
+
+[Lexer Lex when a comment is passed when # is present should return a single comment token - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        type_: 0x3,
+        value: {"# This is a #comment", " This is a #comment"},
+    },
+}
+---
+
+[Lexer Lex when a comment is passed when another comment is passed should return two comment tokens - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        type_: 0x3,
+        value: {"# C1", " C1"},
+    },
+    &lexer.Match{
+        type_: 0x0,
+        value: {"\n"},
+    },
+    &lexer.Match{
+        type_: 0x3,
+        value: {"# C2", " C2"},
+    },
+}
+---
+
+[Lexer Lex when a docstring is passed should return a docstring token - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        type_: 0x2,
+        value: {"## This is a docstring", "This is a docstring"},
+    },
+}
+---
+
+[Lexer Lex when a docstring is passed when ## is present should return a single docstring token - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        type_: 0x2,
+        value: {"## This is a ##docstring", "This is a ##docstring"},
+    },
+}
+---
+
+[Lexer Lex when a docstring is passed when another docstring is passed should return two docstring tokens - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        type_: 0x2,
+        value: {"## D1", "D1"},
+    },
+    &lexer.Match{
+        type_: 0x0,
+        value: {"\n"},
+    },
+    &lexer.Match{
+        type_: 0x2,
+        value: {"## D2", "D2"},
+    },
+}
+---
+
+[Lexer Lex when a variable is passed when unquoted value is passed should return a variable token - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        type_: 0x5,
+        value: {"VAR=val", "VAR", "", "val"},
+    },
+}
+---
+
+[Lexer Lex when a variable is passed when unquoted value is passed when multiple lines are passed should return only the variable line - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        type_: 0x5,
+        value: {"VAR=val", "VAR", "", "val"},
+    },
+    &lexer.Match{
+        type_: 0x0,
+        value: {"\n"},
+    },
+    &lexer.Match{
+        type_: 0x3,
+        value: {"#comment", "comment"},
+    },
+}
+---
+
+[Lexer Lex when a variable is passed when quoted value is passed should return a variable token - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        type_: 0x5,
+        value: {"VAR=\"val\"", "VAR", "val", ""},
+    },
+}
+---
+
+[Lexer Lex when a variable is passed when quoted value is passed when multiple lines are between quotes should return a variable token - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        type_: 0x5,
+        value: {"VAR=\"val\nval\"", "VAR", "val\nval", ""},
+    },
+}
+---
+
+[Lexer Lex when a variable is passed when quoted value is passed when space or tabs appear around equal should return a variable token - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        type_: 0x5,
+        value: {"VAR \t=  \t\"ASD\"", "VAR", "ASD", ""},
+    },
+}
+---
+
+[Lexer Lex when a call is passed should return a call token - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        type_: 0x4,
+        value: {"VAR=${func}", "VAR", "func", ""},
+    },
+}
+---
+
+[Lexer Lex when a call is passed when multiple lines are between curly braces should return a call token - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        type_: 0x4,
+        value: {"VAR=${func\nfunc}", "VAR", "func", "func"},
+    },
+}
+---
+
+[Lexer Lex when a call is passed when space or tabs appear around equal should return a call token - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        type_: 0x4,
+        value: {"VAR\t =  \t${func}", "VAR", "func", ""},
+    },
+}
+---
+
+[Lexer Lex when a rule is passed should return a rule token - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        type_: 0x6,
+        value: {"rule:", "rule", ""},
+    },
+}
+---
+
+[Lexer Lex when a rule is passed when arguments are passed should return a rule token - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        type_: 0x6,
+        value: {"rule: arg1 arg2", "rule", " arg1 arg2"},
+    },
+}
+---
+
+[Lexer Lex when a rule is passed when another rule is passed should return two rule tokens - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        type_: 0x6,
+        value: {"rule1: a b", "rule1", " a b"},
+    },
+    &lexer.Match{
+        type_: 0x0,
+        value: {"\n"},
+    },
+    &lexer.Match{
+        type_: 0x6,
+        value: {"rule2: c d", "rule2", " c d"},
+    },
+}
+---
+
+[Lexer Lex when a rule is passed when another rule is passed when the second rule is nested should return two rule tokens - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        type_: 0x6,
+        value: {"rule1: a", "rule1", " a"},
+    },
+    &lexer.Match{
+        type_: 0x0,
+        value: {"\n"},
+    },
+    &lexer.Match{
+        type_: 0x1,
+        value: {"\t"},
+    },
+    &lexer.Match{
+        type_: 0x6,
+        value: {"rule2:", "rule2", ""},
+    },
+}
+---
+
+[Lexer Lex when an action is passed should return an action token - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        type_: 0x7,
+        value: {"echo \"Hello World\""},
+    },
+}
+---
+
+[Lexer Lex when an action is passed when multiple lines are passed should return multiple action tokens - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        type_: 0x7,
+        value: {"echo \"Hello World\""},
+    },
+    &lexer.Match{
+        type_: 0x0,
+        value: {"\n"},
+    },
+    &lexer.Match{
+        type_: 0x7,
+        value: {"echo \"Hello World\""},
+    },
+}
+---
+
+[Lexer Lex when a code snippet is passed should return a sequence of tokens - 1]
+[]*lexer.Match{
+    &lexer.Match{
+        type_: 0x0,
+        value: {"\n"},
+    },
+    &lexer.Match{
+        type_: 0x3,
+        value: {"# This is a comment", " This is a comment"},
+    },
+    &lexer.Match{
+        type_: 0x0,
+        value: {"\n"},
+    },
+    &lexer.Match{
+        type_: 0x5,
+        value: {"VAR=val", "VAR", "", "val"},
+    },
+    &lexer.Match{
+        type_: 0x0,
+        value: {"\n"},
+    },
+    &lexer.Match{
+        type_: 0x5,
+        value: {"VAR2=\"val\"", "VAR2", "val", ""},
+    },
+    &lexer.Match{
+        type_: 0x0,
+        value: {"\n"},
+    },
+    &lexer.Match{
+        type_: 0x4,
+        value: {"VAR3=${func}", "VAR3", "func", ""},
+    },
+    &lexer.Match{
+        type_: 0x0,
+        value: {"\n"},
+    },
+    &lexer.Match{
+        type_: 0x4,
+        value: {"VAR4=${func\nfunc}", "VAR4", "func", "func"},
+    },
+    &lexer.Match{
+        type_: 0x0,
+        value: {"\n"},
+    },
+    &lexer.Match{
+        type_: 0x6,
+        value: {"rule1: a b", "rule1", " a b"},
+    },
+    &lexer.Match{
+        type_: 0x0,
+        value: {"\n"},
+    },
+    &lexer.Match{
+        type_: 0x1,
+        value: {"\t"},
+    },
+    &lexer.Match{
+        type_: 0x6,
+        value: {"rule4:", "rule4", ""},
+    },
+    &lexer.Match{
+        type_: 0x0,
+        value: {"\n"},
+    },
+    &lexer.Match{
+        type_: 0x1,
+        value: {"\t\t"},
+    },
+    &lexer.Match{
+        type_: 0x7,
+        value: {"echo \"Hello World\""},
+    },
+    &lexer.Match{
+        type_: 0x0,
+        value: {"\n"},
+    },
+    &lexer.Match{
+        type_: 0x6,
+        value: {"rule2: c d", "rule2", " c d"},
+    },
+    &lexer.Match{
+        type_: 0x0,
+        value: {"\n"},
+    },
+    &lexer.Match{
+        type_: 0x2,
+        value: {"## This is a docstring", "This is a docstring"},
+    },
+    &lexer.Match{
+        type_: 0x0,
+        value: {"\n"},
+    },
+    &lexer.Match{
+        type_: 0x6,
+        value: {"rule3:", "rule3", ""},
+    },
+    &lexer.Match{
+        type_: 0x0,
+        value: {"\n"},
+    },
+    &lexer.Match{
+        type_: 0x1,
+        value: {"\t"},
+    },
+    &lexer.Match{
+        type_: 0x7,
+        value: {"echo \"Hello World\""},
+    },
+    &lexer.Match{
+        type_: 0x0,
+        value: {"\n"},
+    },
+    &lexer.Match{
+        type_: 0x1,
+        value: {"\t"},
+    },
+    &lexer.Match{
+        type_: 0x7,
+        value: {"echo \"Hello World\""},
+    },
+    &lexer.Match{
+        type_: 0x0,
+        value: {"\n"},
+    },
+}
+---
+
+[Lexer Match when a new match is created when Type() is called should return the type of the match - 1]
+[]interface {}{
+    lexer.Token(0x7),
+}
+---
+
+[Lexer Match when a new match is created when Value() is called when the index exists should return the first value of the match - 1]
+[]interface {}{
+    "echo Hello World",
+}
+---

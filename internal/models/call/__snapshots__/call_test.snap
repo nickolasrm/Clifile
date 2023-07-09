@@ -1,0 +1,24 @@
+
+[Call when a newcall is created when Function() is called should return the function name - 1]
+[]interface {}{
+    "name",
+}
+---
+
+[Call when a newcall is created when Name() is called should return the call name - 1]
+[]interface {}{
+    "func",
+}
+---
+
+[Call when a newcall is created when Arguments() is called should return the arguments map - 1]
+[]interface {}{
+    map[string]string{"arg1":"val", "arg2":"val2"},
+}
+---
+
+[Call when a newcall is created when Argument() is called when an existing argument is passed should return its value - 1]
+[]interface {}{
+    "val",
+}
+---

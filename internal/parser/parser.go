@@ -15,21 +15,18 @@ import (
 
 // Parser is a struct that represents the parser
 type Parser struct {
-	tokens  []*lexer.Match
 	program *program.Program
 }
 
 // NewParser is a helper function to create a new parser
-func NewParser(matches []*lexer.Match) *Parser {
+func NewParser() *Parser {
 	return &Parser{
-		tokens:  matches,
 		program: program.NewProgram(),
 	}
 }
 
 // parseDoc parses the documentation of the program if it exists
-func (p *Parser) parseDoc() {
-	tokens := p.tokens
+func (p *Parser) parseDoc(tokens []*lexer.Match) []*lexer.Match {
 	if tokens[0].Type() == lexer.Docstring {
 		programDoc := ""
 		var i int
@@ -56,7 +53,7 @@ func (p *Parser) parseDoc() {
 			tokens = tokens[i:]
 		}
 	}
-	p.tokens = tokens
+	return tokens
 }
 
 // parseVariable creates a variable from a variable lexer match
@@ -104,7 +101,7 @@ func parseCall(match *lexer.Match) (*call.Call, error) {
 
 // parseBody parses the body of the program and creates the rules
 // and variables
-func (p *Parser) parseBody() error {
+func (p *Parser) parseBody(tokens []*lexer.Match) error {
 	program := p.program
 	indent := 0
 	ruleBranch := make([]*rule.Rule, 0)
@@ -112,7 +109,7 @@ func (p *Parser) parseBody() error {
 	var parentRule *rule.Rule = nil
 	var currentRule *rule.Rule = nil
 
-	for _, match := range p.tokens {
+	for _, match := range tokens {
 		if indent > 0 {
 			switch match.Type() {
 			case lexer.Variable, lexer.Call:
@@ -190,19 +187,19 @@ func (p *Parser) parseBody() error {
 					match.Value(0),
 				)
 			}
-			currentRule.AppendActions(match.Value(0) + "\n")
+			currentRule.AppendActions(match.Value(0))
 		}
 	}
 	return nil
 }
 
 // Parse parses a list of lexer matches into a structured program.
-func (p *Parser) Parse() (*program.Program, error) {
-	if len(p.tokens) == 0 {
+func (p *Parser) Parse(tokens []*lexer.Match) (*program.Program, error) {
+	if len(tokens) == 0 {
 		return nil, fmt.Errorf("no tokens to parse")
 	}
-	p.parseDoc()
-	err := p.parseBody()
+	tokens = p.parseDoc(tokens)
+	err := p.parseBody(tokens)
 	if err != nil {
 		return nil, err
 	}
@@ -213,6 +210,6 @@ func (p *Parser) Parse() (*program.Program, error) {
 // it returns a pointer to a Program struct and an error if any
 // semantic error is found
 func Parse(tokens []*lexer.Match) (*program.Program, error) {
-	parser := NewParser(tokens)
-	return parser.Parse()
+	parser := NewParser()
+	return parser.Parse(tokens)
 }

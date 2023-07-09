@@ -1,0 +1,24 @@
+
+[Variable when a new variable is created when Name() is called should return the call name - 1]
+[]interface {}{
+    "name",
+}
+---
+
+[Variable when a new variable is created when Value() is called should return its value - 1]
+[]interface {}{
+    "value",
+}
+---
+
+[Variable when a new variable is created when SetValue() is called should update the variable value - 1]
+[]interface {}{
+    "custom",
+}
+---
+
+[Variable when a new variable is created when Name() is called should return the variable name - 1]
+[]interface {}{
+    "name",
+}
+---

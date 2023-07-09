@@ -2,7 +2,7 @@
 ## Clifile common commands
 ## -----------------------
 
-
+.PHONY: test install lint help
 help: ## Show this help.
 	@sed -n '/# IGNORE$$/!s/## *//p' $(MAKEFILE_LIST)  # IGNORE
 
@@ -15,4 +15,4 @@ lint: ## Run linter
 	@golint ./**/*
 
 test: ## Run tests
-	@ginkgo -r -v --cover
+	@ginkgo -r --cover

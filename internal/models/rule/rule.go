@@ -1,5 +1,7 @@
 package rule
 
+import "golang.org/x/exp/maps"
+
 // Rule is a struct that represents a group of actions and its properties.
 // it contains the name of the rule, the positional arguments order,
 // the docstring, the actions the rule will execute and its child rules if it is a group
@@ -13,13 +15,17 @@ type Rule struct {
 
 // NewRule is a helper function to create a new rule
 func NewRule(name string, positional []string, doc, actions string) *Rule {
-	return &Rule{
+	r := &Rule{
 		name:       name,
 		positional: positional,
 		doc:        doc,
-		actions:    actions,
+		actions:    "",
 		rules:      make(map[string]*Rule),
 	}
+	if actions != "" {
+		r.AppendActions(actions)
+	}
+	return r
 }
 
 // Name returns the name of the rule
@@ -44,12 +50,12 @@ func (r *Rule) Actions() string {
 
 // AppendActions appends actions to the actions of the rule
 func (r *Rule) AppendActions(actions string) {
-	r.actions += actions
+	r.actions += actions + "\n"
 }
 
 // Rules returns the child rules of the rule
-func (r *Rule) Rules() map[string]*Rule {
-	return r.rules
+func (r *Rule) Rules() []*Rule {
+	return maps.Values(r.rules)
 }
 
 // Rule returns a child rule of the rule

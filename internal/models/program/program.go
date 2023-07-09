@@ -6,6 +6,7 @@ import (
 	"github.com/nickolasrm/clifile/internal/models/call"
 	"github.com/nickolasrm/clifile/internal/models/rule"
 	"github.com/nickolasrm/clifile/internal/models/variable"
+	"golang.org/x/exp/maps"
 )
 
 // Program is a struct that represents the entire program.
@@ -50,8 +51,8 @@ func (p *Program) AddCall(c *call.Call) {
 }
 
 // Rules returns the rules of the program
-func (p *Program) Rules() map[string]*rule.Rule {
-	return p.rules
+func (p *Program) Rules() []*rule.Rule {
+	return maps.Values(p.rules)
 }
 
 // Rule returns a rule from the program

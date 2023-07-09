@@ -3,14 +3,15 @@ module github.com/nickolasrm/clifile
 go 1.20
 
 require (
+	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/gkampitakis/go-snaps v0.4.5
 	github.com/onsi/ginkgo/v2 v2.9.5
 	github.com/onsi/gomega v1.27.7
 	github.com/spf13/cobra v1.7.0
+	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df
 )
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.3.7 // indirect
 	github.com/gkampitakis/ciinfo v0.2.4 // indirect
 	github.com/gkampitakis/go-diff v1.3.2 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect

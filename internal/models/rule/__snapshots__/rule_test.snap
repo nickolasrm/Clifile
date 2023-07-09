@@ -1,0 +1,81 @@
+
+[Rule when a new rule is created when Name() is called should return the rule name - 1]
+[]interface {}{
+    "name",
+}
+---
+
+[Rule when a new rule is created when Positional() is called it should return the positional args - 1]
+[]interface {}{
+    []string{"arg1", "arg2", "arg3"},
+}
+---
+
+[Rule when a new rule is created when Doc() is called should return the rule doc - 1]
+[]interface {}{
+    "doc",
+}
+---
+
+[Rule when a new rule is created when Actions() is called should return the rule actions - 1]
+[]interface {}{
+    "action\n",
+}
+---
+
+[Rule when a new rule is created when AppendActions() is called should append the text in actions as a newline - 1]
+[]interface {}{
+    "action\nnewline\nnewline2\n",
+}
+---
+
+[Rule when a new rule is created when AddRule() is called should add a new child rule - 1]
+[]interface {}{
+    []*rule.Rule{
+        &rule.Rule{
+            name:       "name",
+            positional: {"arg1", "arg2", "arg3"},
+            doc:        "doc",
+            actions:    "action\n",
+            rules:      {
+                "name": &rule.Rule{(CYCLIC REFERENCE)},
+            },
+        },
+    },
+}
+---
+
+[Rule when a new rule is created when Rules() is called when no child rules exist should return an empty array - 1]
+[]interface {}{
+    []*rule.Rule{
+    },
+}
+---
+
+[Rule when a new rule is created when Rules() is called when child rules exist should return the array of child rules - 1]
+[]interface {}{
+    &rule.Rule{
+        name:       "name",
+        positional: {"arg1", "arg2", "arg3"},
+        doc:        "doc",
+        actions:    "action\n",
+        rules:      {
+            "name": &rule.Rule{(CYCLIC REFERENCE)},
+        },
+    },
+}
+---
+
+[Rule when a new rule is created when Rule() is called when an existent child rule name is passed should return the rule - 1]
+[]interface {}{
+    &rule.Rule{
+        name:       "name",
+        positional: {"arg1", "arg2", "arg3"},
+        doc:        "doc",
+        actions:    "action\n",
+        rules:      {
+            "name": &rule.Rule{(CYCLIC REFERENCE)},
+        },
+    },
+}
+---
